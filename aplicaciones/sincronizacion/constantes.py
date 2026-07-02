@@ -15,3 +15,4 @@ class MensajesSincronizacionApi:
     CONFLICTO_VERSION = "Conflicto de versiones entre cliente y servidor."
     FORMULARIO_FINALIZADO = "La sesión ya fue finalizada."
     OPERACION_ERROR = "No se pudo procesar la operación de sincronización."
+    OFFLINE_NO_PERMITIDO = "El formulario no permite la operación sin conexión."

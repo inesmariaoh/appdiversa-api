@@ -93,15 +93,17 @@ def _extraer_valor_servidor(respuesta: Respuesta) -> Any:
 
 
 def _actualizar_actividad_sesion(sesion: SesionAnonima) -> None:
-    """Actualiza el estado y la ultima actividad de la sesion."""
+    """Actualiza el estado y marca la sesion como operada sin conexion."""
     sesion.estado = EstadoSesionAnonima.EN_PROCESO
     sesion.fecha_ultima_actividad = timezone.now()
     sesion.fecha_sincronizacion = timezone.now()
+    sesion.es_offline = True
     sesion.save(
         update_fields=[
             "estado",
             "fecha_ultima_actividad",
             "fecha_sincronizacion",
+            "es_offline",
             "fecha_modificacion",
         ],
     )
@@ -117,6 +119,10 @@ def registrar_operacion(
     ultimo_error: str = "",
 ) -> OperacionSincronizacion:
     """Registra una operacion de sincronizacion en el historial."""
+    intentos_previos = OperacionSincronizacion.objects.filter(
+        uuid_sesion=uuid_sesion,
+        uuid_local=operacion.uuid_local,
+    ).count()
     return OperacionSincronizacion.objects.create(
         uuid_local=operacion.uuid_local,
         uuid_sesion=uuid_sesion,
@@ -126,6 +132,7 @@ def registrar_operacion(
         fecha_cliente=operacion.fecha_cliente,
         checksum=operacion.checksum,
         origen=origen,
+        numero_reintentos=intentos_previos,
         payload={
             "codigo_pregunta": operacion.codigo_pregunta,
             "valor": operacion.valor,
@@ -511,6 +518,48 @@ def _procesar_operacion_individual(
         )
 
 
+def _rechazar_batch_offline_no_permitido(
+    sesion: SesionAnonima,
+    dispositivo: str,
+    origen: str,
+    operaciones: list[dict[str, Any]],
+) -> ResultadoBatchSync:
+    """Rechaza el lote cuando el formulario no admite operacion sin conexion."""
+    mensaje = MensajesSincronizacionApi.OFFLINE_NO_PERMITIDO
+    errores: list[dict[str, Any]] = []
+    for datos_operacion in operaciones:
+        operacion = _construir_operacion_entrada(datos_operacion)
+        registrar_operacion(
+            sesion.uuid_sesion,
+            operacion,
+            dispositivo,
+            EstadoSincronizacion.ERROR,
+            origen,
+            ultimo_error=mensaje,
+        )
+        errores.append({"uuid_local": str(operacion.uuid_local), "mensaje": mensaje})
+
+    registrar_auditoria(
+        entidad=SesionAnonima.__name__,
+        entidad_id=str(sesion.pk),
+        accion=AccionAuditoria.SINCRONIZAR,
+        valor_nuevo={
+            "uuid_sesion": str(sesion.uuid_sesion),
+            "dispositivo": dispositivo,
+            "rechazadas": len(errores),
+            "motivo": mensaje,
+        },
+        descripcion="Lote de sincronizacion rechazado por formulario sin soporte offline.",
+    )
+    return ResultadoBatchSync(
+        operaciones_procesadas=len(operaciones),
+        operaciones_actualizadas=0,
+        duplicadas=0,
+        conflictos=[],
+        errores=errores,
+    )
+
+
 def sincronizar_batch(
     uuid_sesion: UUID,
     dispositivo: str,
@@ -523,6 +572,14 @@ def sincronizar_batch(
         raise SesionRespuestaNoExisteError()
 
     origen = f"sync:{version_app}"
+
+    if not sesion.formulario.permite_offline:
+        return _rechazar_batch_offline_no_permitido(
+            sesion,
+            dispositivo,
+            origen,
+            operaciones,
+        )
     procesadas = 0
     actualizadas = 0
     duplicadas = 0

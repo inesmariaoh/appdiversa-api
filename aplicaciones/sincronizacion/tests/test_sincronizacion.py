@@ -247,6 +247,90 @@ class SincronizacionServiciosTests(TestCase):
             ).exists(),
         )
 
+    def test_batch_rechazado_cuando_formulario_no_permite_offline(self) -> None:
+        sesion, _, _, pregunta = crear_contexto_sincronizacion()
+        sesion.formulario.permite_offline = False
+        sesion.formulario.save(update_fields=["permite_offline"])
+        operaciones = [construir_operacion(uuid.uuid4(), pregunta.codigo, 5, 1)]
+
+        resultado = sincronizar_batch(
+            sesion.uuid_sesion,
+            "device-offline",
+            "1.0.0",
+            operaciones,
+        )
+
+        self.assertEqual(resultado.operaciones_procesadas, 1)
+        self.assertEqual(resultado.operaciones_actualizadas, 0)
+        self.assertEqual(len(resultado.errores), 1)
+        self.assertEqual(
+            resultado.errores[0]["mensaje"],
+            MensajesSincronizacionApi.OFFLINE_NO_PERMITIDO,
+        )
+        self.assertFalse(Respuesta.objects.filter(sesion=sesion).exists())
+
+    def test_batch_no_permite_offline_registra_operacion_con_error(self) -> None:
+        sesion, _, _, pregunta = crear_contexto_sincronizacion()
+        sesion.formulario.permite_offline = False
+        sesion.formulario.save(update_fields=["permite_offline"])
+
+        sincronizar_batch(
+            sesion.uuid_sesion,
+            "device-offline",
+            "1.0.0",
+            [construir_operacion(uuid.uuid4(), pregunta.codigo, 5, 1)],
+        )
+
+        operacion = OperacionSincronizacion.objects.get(uuid_sesion=sesion.uuid_sesion)
+        self.assertEqual(operacion.estado, EstadoSincronizacion.ERROR)
+        self.assertEqual(
+            operacion.ultimo_error,
+            MensajesSincronizacionApi.OFFLINE_NO_PERMITIDO,
+        )
+
+    def test_sincronizacion_marca_sesion_como_offline(self) -> None:
+        sesion, _, _, pregunta = crear_contexto_sincronizacion()
+        self.assertFalse(sesion.es_offline)
+
+        sincronizar_batch(
+            sesion.uuid_sesion,
+            "device-offline",
+            "1.0.0",
+            [construir_operacion(uuid.uuid4(), pregunta.codigo, 9, 1)],
+        )
+
+        sesion.refresh_from_db()
+        self.assertTrue(sesion.es_offline)
+
+    def test_reintentos_se_incrementan_por_uuid_local(self) -> None:
+        sesion, _, _, pregunta = crear_contexto_sincronizacion()
+        uuid_local = uuid.uuid4()
+        operacion = OperacionEntrada(
+            uuid_local=uuid_local,
+            codigo_pregunta=pregunta.codigo,
+            valor=1,
+            version_cliente=1,
+            fecha_cliente=datetime(2026, 6, 28, 10, 0, tzinfo=timezone.utc),
+        )
+
+        primero = registrar_operacion(
+            sesion.uuid_sesion,
+            operacion,
+            "device-1",
+            EstadoSincronizacion.ERROR,
+            "test",
+        )
+        segundo = registrar_operacion(
+            sesion.uuid_sesion,
+            operacion,
+            "device-1",
+            EstadoSincronizacion.SINCRONIZADA,
+            "test",
+        )
+
+        self.assertEqual(primero.numero_reintentos, 0)
+        self.assertEqual(segundo.numero_reintentos, 1)
+
 
 class SincronizacionApiTests(TestCase):
     """Pruebas del endpoint de sincronizacion."""
