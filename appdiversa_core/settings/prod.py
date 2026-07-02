@@ -1,32 +1,12 @@
 """
 Configuracion para entorno de produccion.
+
+Hereda todos los ajustes de base (CORS, CSRF, correo, base de datos) y solo
+sobrescribe seguridad y almacenamiento de estaticos para el despliegue.
 """
 
-from .base import (
-    ALLOWED_HOSTS,
-    ASGI_APPLICATION,
-    AUTH_PASSWORD_VALIDATORS,
-    BASE_DIR,
-    CORS_ALLOWED_ORIGINS,
-    DATABASES,
-    DEBUG,
-    DEFAULT_AUTO_FIELD,
-    INSTALLED_APPS,
-    LANGUAGE_CODE,
-    MEDIA_ROOT,
-    MEDIA_URL,
-    MIDDLEWARE,
-    REST_FRAMEWORK,
-    ROOT_URLCONF,
-    SECRET_KEY,
-    STATIC_ROOT,
-    STATIC_URL,
-    TEMPLATES,
-    TIME_ZONE,
-    USE_I18N,
-    USE_TZ,
-    WSGI_APPLICATION,
-)
+from .base import *  # noqa: F403
+from .base import MIDDLEWARE
 
 # WhiteNoise sirve estaticos del admin y DRF cuando no hay CDN delante.
 _MIDDLEWARE_SIN_SEGURIDAD = [

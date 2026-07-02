@@ -52,7 +52,7 @@ RECURSOS_IMAGENES_CLOUDINARY: dict[str, RecursoImagenExterna] = {
     "image_proxma_enc": RecursoImagenExterna(
         url=(
             "https://res.cloudinary.com/t46o5s2e/image/upload/"
-            "v1782969030/image_ecu_disponible_afimrf.png"
+            "v1782969030/image_proxma_enc_bxrsql.png"
         ),
         nombre_original="image_proxma_enc.png",
         extension="png",
