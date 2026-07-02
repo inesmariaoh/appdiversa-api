@@ -1,0 +1,55 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Testing database (SQLite temporal para manage.py test)
+.test_db.sqlite3
+db.sqlite3
+
+# Django
+staticfiles/
+media/
+logs/
+*.log
+
+# Dumps y respaldos de base de datos
+dumps/
+*.dump
+*.sql.gz
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Archivos temporales
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Informes tecnicos locales (no versionados)
+docs/informes/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

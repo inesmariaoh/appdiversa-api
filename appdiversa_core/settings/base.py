@@ -1,0 +1,207 @@
+"""
+Configuracion base compartida por todos los entornos de AppDiversa API.
+"""
+
+import os
+import sys
+from pathlib import Path
+
+import environ
+from corsheaders.defaults import default_headers
+
+env = environ.Env(
+    DEBUG=(bool, False),
+    ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1", "0.0.0.0"]),
+    CORS_ALLOWED_ORIGINS=(list, []),
+    DB_PORT=(str, "3306"),
+    API_INTERNA_TOKEN=(str, ""),
+    EMAIL_PORT=(int, 587),
+    EMAIL_USE_TLS=(bool, True),
+    EMAIL_TIMEOUT=(int, 20),
+    NOTIFICACIONES_PROVEEDOR=(str, "dummy"),
+)
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+
+SECRET_KEY = env("SECRET_KEY")
+DEBUG = env("DEBUG")
+ALLOWED_HOSTS = env("ALLOWED_HOSTS")
+
+INSTALLED_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "rest_framework",
+    "corsheaders",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
+    "aplicaciones.comun",
+    "aplicaciones.formularios",
+    "aplicaciones.respuestas",
+    "aplicaciones.sesiones_anonimas",
+    "aplicaciones.sincronizacion",
+    "aplicaciones.auditoria",
+    "aplicaciones.contenidos",
+    "aplicaciones.analitica",
+    "aplicaciones.catalogos",
+    "aplicaciones.archivos",
+    "aplicaciones.internacionalizacion",
+    "aplicaciones.notificaciones",
+    "aplicaciones.exportaciones",
+    "aplicaciones.usuarios",
+]
+
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "aplicaciones.comun.middleware_csrf_api.EximirCsrfRutasApiMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "aplicaciones.auditoria.middleware.AuditoriaContextoMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+
+ROOT_URLCONF = "appdiversa_core.urls"
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = "appdiversa_core.wsgi.application"
+ASGI_APPLICATION = "appdiversa_core.asgi.application"
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": env("DB_NAME"),
+        "USER": env("DB_USER"),
+        "PASSWORD": env("DB_PASSWORD"),
+        "HOST": env("DB_HOST"),
+        "PORT": env("DB_PORT"),
+        "OPTIONS": {
+            "charset": "utf8mb4",
+        },
+        "TEST": {
+            "CHARSET": "utf8mb4",
+        },
+    },
+}
+
+if "test" in sys.argv:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / ".test_db.sqlite3",
+        },
+    }
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
+]
+
+LANGUAGE_CODE = "es-co"
+TIME_ZONE = "America/Bogota"
+USE_I18N = True
+USE_TZ = True
+
+STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = (
+    *default_headers,
+    "x-sesion-anonima",
+    "x-token-sesion",
+)
+
+# Token temporal para endpoints internos hasta integrar Keycloak.
+API_INTERNA_TOKEN = env("API_INTERNA_TOKEN")
+
+# Configuracion de correo electronico y notificaciones.
+EMAIL_BACKEND = env(
+    "EMAIL_BACKEND",
+    default="django.core.mail.backends.console.EmailBackend",
+)
+EMAIL_HOST = env("EMAIL_HOST", default="")
+EMAIL_PORT = env("EMAIL_PORT")
+EMAIL_USE_TLS = env("EMAIL_USE_TLS")
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+EMAIL_DEFAULT_FROM = env("EMAIL_DEFAULT_FROM", default="noreply@appdiversa.local")
+DEFAULT_FROM_EMAIL = EMAIL_DEFAULT_FROM
+EMAIL_TIMEOUT = env("EMAIL_TIMEOUT")
+FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")
+NOTIFICACIONES_PROVEEDOR = env("NOTIFICACIONES_PROVEEDOR")
+
+if (
+    NOTIFICACIONES_PROVEEDOR == "smtp"
+    and EMAIL_BACKEND.endswith("console.EmailBackend")
+):
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+_CSRF_TRUSTED_ORIGINS_ENV = env.list("CSRF_TRUSTED_ORIGINS", default=[])
+if _CSRF_TRUSTED_ORIGINS_ENV:
+    CSRF_TRUSTED_ORIGINS = _CSRF_TRUSTED_ORIGINS_ENV
+else:
+    CSRF_TRUSTED_ORIGINS = list(CORS_ALLOWED_ORIGINS)
+    _origen_frontend = FRONTEND_URL.rstrip("/")
+    if _origen_frontend and _origen_frontend not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(_origen_frontend)
+
+CSRF_FAILURE_VIEW = "aplicaciones.comun.vistas_csrf.respuesta_csrf_fallida"
+CSRF_COOKIE_SAMESITE = env("CSRF_COOKIE_SAMESITE", default="Lax")
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.AllowAny",
+    ],
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+    ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "EXCEPTION_HANDLER": "aplicaciones.comun.excepciones_api.manejador_excepciones_api",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "AppDiversa API",
+    "DESCRIPTION": "API REST del motor de formularios parametrizables AppDiversa 2.0",
+    "VERSION": "v1",
+    "SERVE_INCLUDE_SCHEMA": False,
+}

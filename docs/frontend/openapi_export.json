@@ -1,0 +1,2844 @@
+openapi: 3.0.3
+info:
+  title: AppDiversa API
+  version: v1
+  description: API REST del motor de formularios parametrizables AppDiversa 2.0
+paths:
+  /api/v1/analitica/respuestas/:
+    get:
+      operationId: v1_analitica_respuestas_list
+      description: Endpoint de datos analiticos. Requiere token temporal de API interna
+        hasta integrar Keycloak.
+      summary: Listar respuestas analiticas
+      parameters:
+      - in: header
+        name: X-API-INTERNA
+        schema:
+          type: string
+        description: Token temporal de API interna. Será reemplazado por Keycloak
+          en una fase posterior.
+      - in: query
+        name: estado_sesion
+        schema:
+          type: string
+        description: Estado de la sesion anonima.
+      - in: query
+        name: fecha_fin
+        schema:
+          type: string
+        description: Fecha final de sesion en formato ISO.
+      - in: query
+        name: fecha_inicio
+        schema:
+          type: string
+        description: Fecha inicial de sesion en formato ISO.
+      - in: query
+        name: formulario_codigo
+        schema:
+          type: string
+        description: Codigo del formulario a filtrar.
+      tags:
+      - Analitica
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RespuestaAnalitica'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorAnalitica'
+          description: ''
+  /api/v1/archivos/:
+    post:
+      operationId: v1_archivos_create
+      description: Registra un archivo en el repositorio documental transversal. Requiere
+        sesion anonima valida o token de API interna temporal.
+      summary: Subir archivo al repositorio
+      parameters:
+      - in: header
+        name: X-API-INTERNA
+        schema:
+          type: string
+        description: Token temporal de API interna. Será reemplazado por Keycloak
+          en una fase posterior.
+      - in: header
+        name: X-Sesion-Anonima
+        schema:
+          type: string
+        description: UUID de la sesion anonima asociada a la operacion.
+      - in: header
+        name: X-Token-Sesion
+        schema:
+          type: string
+        description: Token de sesion anonima emitido al crear la sesion.
+      tags:
+      - Archivos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubirArchivoEntrada'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubirArchivoEntrada'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubirArchivoEntrada'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArchivoRepositorio'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorArchivo'
+          description: ''
+  /api/v1/archivos/{uuid_archivo}/:
+    get:
+      operationId: v1_archivos_retrieve
+      description: Retorna metadatos del archivo solicitado.
+      summary: Consultar metadatos de archivo
+      parameters:
+      - in: header
+        name: X-API-INTERNA
+        schema:
+          type: string
+        description: Token temporal de API interna. Será reemplazado por Keycloak
+          en una fase posterior.
+      - in: path
+        name: uuid_archivo
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Archivos
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArchivoRepositorio'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorArchivo'
+          description: ''
+    delete:
+      operationId: v1_archivos_destroy
+      description: Realiza soft delete del archivo en el repositorio documental.
+      summary: Eliminar archivo del repositorio
+      parameters:
+      - in: header
+        name: X-API-INTERNA
+        schema:
+          type: string
+        description: Token temporal de API interna. Será reemplazado por Keycloak
+          en una fase posterior.
+      - in: path
+        name: uuid_archivo
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Archivos
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArchivoRepositorio'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorArchivo'
+          description: ''
+  /api/v1/archivos/{uuid_archivo}/descargar/:
+    get:
+      operationId: v1_archivos_descargar_retrieve
+      description: Retorna el contenido binario del archivo solicitado.
+      summary: Descargar archivo del repositorio
+      parameters:
+      - in: header
+        name: X-API-INTERNA
+        schema:
+          type: string
+        description: Token temporal de API interna. Será reemplazado por Keycloak
+          en una fase posterior.
+      - in: path
+        name: uuid_archivo
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Archivos
+      responses:
+        '200':
+          description: Contenido binario del archivo.
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorArchivo'
+          description: ''
+  /api/v1/catalogos/:
+    get:
+      operationId: v1_catalogos_list
+      description: Retorna la lista de catalogos parametrizables activos para consumo
+        del frontend.
+      summary: Listar catalogos activos
+      parameters:
+      - in: query
+        name: idioma
+        schema:
+          type: string
+        description: Codigo ISO del idioma para traducciones de contenido.
+      tags:
+      - Catalogos
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Catalogo'
+          description: ''
+  /api/v1/catalogos/{codigo_catalogo}/items/:
+    get:
+      operationId: v1_catalogos_items_list
+      description: Retorna los items de un catalogo parametrizable. Permite filtrar
+        por item padre para jerarquias como pais, departamento y municipio.
+      summary: Listar items de un catalogo
+      parameters:
+      - in: query
+        name: busqueda
+        schema:
+          type: string
+        description: Filtra items por nombre o codigo.
+      - in: path
+        name: codigo_catalogo
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: codigo_padre
+        schema:
+          type: string
+        description: Codigo del item padre para filtrar hijos.
+      - in: query
+        name: idioma
+        schema:
+          type: string
+        description: Codigo ISO del idioma para traducciones de contenido.
+      - in: query
+        name: incluir_accesibilidad
+        schema:
+          type: boolean
+        description: Si es verdadero, incluye contenido accesible multimodal en la
+          respuesta.
+      - in: query
+        name: limite
+        schema:
+          type: integer
+        description: Limita la cantidad de items retornados (maximo 1000).
+      - in: query
+        name: solo_activos
+        schema:
+          type: boolean
+        description: Si es verdadero, solo retorna items activos.
+      tags:
+      - Catalogos
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ItemCatalogo'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorCatalogo'
+          description: ''
+  /api/v1/catalogos/{codigo_catalogo}/items/{codigo_item}/hijos/:
+    get:
+      operationId: v1_catalogos_items_hijos_list
+      description: Retorna los items hijos directos de un item dentro de su catalogo.
+      summary: Listar hijos de un item de catalogo
+      parameters:
+      - in: path
+        name: codigo_catalogo
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: codigo_item
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: idioma
+        schema:
+          type: string
+        description: Codigo ISO del idioma para traducciones de contenido.
+      - in: query
+        name: incluir_accesibilidad
+        schema:
+          type: boolean
+        description: Si es verdadero, incluye contenido accesible multimodal en la
+          respuesta.
+      - in: query
+        name: solo_activos
+        schema:
+          type: boolean
+        description: Si es verdadero, solo retorna items activos.
+      tags:
+      - Catalogos
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ItemCatalogo'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorCatalogo'
+          description: ''
+  /api/v1/exportaciones/{uuid_exportacion}/:
+    get:
+      operationId: v1_exportaciones_retrieve
+      description: Retorna el detalle de una exportacion.
+      summary: Consultar exportacion
+      parameters:
+      - in: header
+        name: X-API-INTERNA
+        schema:
+          type: string
+        description: Token temporal de API interna. Será reemplazado por Keycloak
+          en una fase posterior.
+      - in: path
+        name: uuid_exportacion
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Exportaciones
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exportacion'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorExportacion'
+          description: ''
+  /api/v1/exportaciones/analitica/:
+    post:
+      operationId: v1_exportaciones_analitica_create
+      description: Ejecuta exportacion de analitica.
+      summary: Exportar analitica
+      parameters:
+      - in: header
+        name: X-API-INTERNA
+        schema:
+          type: string
+        description: Token temporal de API interna. Será reemplazado por Keycloak
+          en una fase posterior.
+      tags:
+      - Exportaciones
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportacionAnaliticaEntrada'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ExportacionAnaliticaEntrada'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ExportacionAnaliticaEntrada'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exportacion'
+          description: ''
+  /api/v1/exportaciones/catalogos/:
+    post:
+      operationId: v1_exportaciones_catalogos_create
+      description: Ejecuta exportacion de catalogos.
+      summary: Exportar catalogos
+      parameters:
+      - in: header
+        name: X-API-INTERNA
+        schema:
+          type: string
+        description: Token temporal de API interna. Será reemplazado por Keycloak
+          en una fase posterior.
+      tags:
+      - Exportaciones
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportacionCatalogosEntrada'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ExportacionCatalogosEntrada'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ExportacionCatalogosEntrada'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exportacion'
+          description: ''
+  /api/v1/exportaciones/respuestas/:
+    post:
+      operationId: v1_exportaciones_respuestas_create
+      description: Ejecuta exportacion de respuestas segun filtros.
+      summary: Exportar respuestas
+      parameters:
+      - in: header
+        name: X-API-INTERNA
+        schema:
+          type: string
+        description: Token temporal de API interna. Será reemplazado por Keycloak
+          en una fase posterior.
+      tags:
+      - Exportaciones
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportacionRespuestasEntrada'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ExportacionRespuestasEntrada'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ExportacionRespuestasEntrada'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exportacion'
+          description: ''
+  /api/v1/formularios/{uuid_formulario}/estructura/:
+    get:
+      operationId: v1_formularios_estructura_retrieve
+      description: Retorna la estructura completa del formulario publicado, incluyendo
+        textos, secciones, preguntas, opciones y reglas.
+      summary: Obtener estructura de formulario
+      parameters:
+      - in: query
+        name: idioma
+        schema:
+          type: string
+        description: Codigo ISO del idioma para traducciones de contenido.
+      - in: path
+        name: uuid_formulario
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Formularios
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FormularioEstructura'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorFormulario'
+          description: Formulario no disponible o sin version publicada.
+  /api/v1/formularios/disponibles/:
+    get:
+      operationId: v1_formularios_disponibles_list
+      description: Retorna la lista de formularios publicados y vigentes para renderizacion
+        dinamica en el frontend.
+      summary: Listar formularios disponibles
+      parameters:
+      - in: query
+        name: idioma
+        schema:
+          type: string
+        description: Codigo ISO del idioma para traducciones de contenido.
+      tags:
+      - Formularios
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FormularioDisponible'
+          description: ''
+  /api/v1/interfaz/configuracion/:
+    get:
+      operationId: v1_interfaz_configuracion_retrieve
+      description: Retorna la parametrizacion visual activa del aplicativo para renderizacion
+        dinamica en el frontend.
+      summary: Obtener configuracion de interfaz
+      parameters:
+      - in: query
+        name: idioma
+        schema:
+          type: string
+        description: Codigo ISO del idioma para traducciones de contenido.
+      - in: query
+        name: incluir_accesibilidad
+        schema:
+          type: boolean
+        description: Si es verdadero, incluye contenido accesible multimodal en la
+          respuesta.
+      tags:
+      - Interfaz
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfiguracionInterfazPublicaEsquema'
+          description: ''
+  /api/v1/internacionalizacion/traducciones/:
+    get:
+      operationId: v1_internacionalizacion_traducciones_list
+      description: Retorna traducciones activas con contenido textual y accesible
+        multimodal. Los archivos se retornan como URLs absolutas cuando existen.
+      summary: Listar traducciones de contenido
+      parameters:
+      - in: query
+        name: campo
+        schema:
+          type: string
+        description: Nombre del campo traducido.
+      - in: query
+        name: entidad
+        schema:
+          type: string
+        description: Nombre de la entidad traducible (Formulario, Pregunta, etc.).
+      - in: query
+        name: entidad_uuid
+        schema:
+          type: string
+        description: UUID de la entidad traducida.
+      - in: query
+        name: idioma
+        schema:
+          type: string
+        description: Codigo ISO del idioma para filtrar traducciones.
+      tags:
+      - Internacionalizacion
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TraduccionContenido'
+          description: ''
+  /api/v1/notificaciones/:
+    get:
+      operationId: v1_notificaciones_list
+      description: Retorna las notificaciones registradas.
+      summary: Listar notificaciones
+      parameters:
+      - in: header
+        name: X-API-INTERNA
+        schema:
+          type: string
+        description: Token temporal de API interna. Será reemplazado por Keycloak
+          en una fase posterior.
+      tags:
+      - Notificaciones
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notificacion'
+          description: ''
+  /api/v1/notificaciones/{uuid_notificacion}/:
+    get:
+      operationId: v1_notificaciones_retrieve
+      description: Retorna el detalle de una notificacion.
+      summary: Consultar notificacion
+      parameters:
+      - in: header
+        name: X-API-INTERNA
+        schema:
+          type: string
+        description: Token temporal de API interna. Será reemplazado por Keycloak
+          en una fase posterior.
+      - in: path
+        name: uuid_notificacion
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Notificaciones
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notificacion'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorNotificacion'
+          description: ''
+  /api/v1/notificaciones/probar/:
+    post:
+      operationId: v1_notificaciones_probar_create
+      description: Genera y registra una notificacion sin enviarla a proveedores externos.
+        Requiere token temporal de API interna hasta integrar Keycloak.
+      summary: Probar generacion de notificacion
+      parameters:
+      - in: header
+        name: X-API-INTERNA
+        schema:
+          type: string
+        description: Token temporal de API interna. Será reemplazado por Keycloak
+          en una fase posterior.
+      tags:
+      - Notificaciones
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProbarNotificacionEntrada'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProbarNotificacionEntrada'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProbarNotificacionEntrada'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notificacion'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorNotificacion'
+          description: ''
+  /api/v1/respuestas/:
+    post:
+      operationId: v1_respuestas_create
+      description: Crea o actualiza una respuesta para una pregunta dentro de una
+        sesion anonima. El backend determina el campo de almacenamiento segun el tipo
+        de pregunta.
+      summary: Guardar o actualizar respuesta
+      parameters:
+      - in: header
+        name: X-Sesion-Anonima
+        schema:
+          type: string
+        description: UUID de la sesion anonima asociada a la operacion.
+      - in: header
+        name: X-Token-Sesion
+        schema:
+          type: string
+        description: Token de sesion anonima emitido al crear la sesion.
+      tags:
+      - Respuestas
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuardarRespuestaEntrada'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GuardarRespuestaEntrada'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GuardarRespuestaEntrada'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuardarRespuestaSalida'
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuardarRespuestaSalida'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorRespuesta'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorRespuesta'
+          description: ''
+  /api/v1/salud/:
+    get:
+      operationId: v1_salud_retrieve
+      description: Confirma que el servicio API responde correctamente.
+      summary: Verificar salud del servicio
+      tags:
+      - v1
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaludRespuesta'
+          description: ''
+  /api/v1/sesiones/:
+    post:
+      operationId: v1_sesiones_create
+      description: Registra una sesion anonima asociada a un formulario publicado
+        o reutiliza una sesion existente por uuid_sesion. Si no se envia token_cliente,
+        el backend genera uno seguro.
+      summary: Crear o reutilizar sesion anonima
+      tags:
+      - Sesiones
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearSesionAnonimaEntrada'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CrearSesionAnonimaEntrada'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CrearSesionAnonimaEntrada'
+        required: true
+      security:
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SesionAnonima'
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SesionAnonima'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorSesion'
+          description: ''
+  /api/v1/sesiones/{uuid_sesion}/evaluar-reglas/:
+    post:
+      operationId: v1_sesiones_evaluar_reglas_create
+      description: Evalua las reglas condicionales activas del formulario segun las
+        respuestas registradas en la sesion.
+      summary: Evaluar reglas de sesion
+      parameters:
+      - in: header
+        name: X-Sesion-Anonima
+        schema:
+          type: string
+        description: UUID de la sesion anonima asociada a la operacion.
+      - in: header
+        name: X-Token-Sesion
+        schema:
+          type: string
+        description: Token de sesion anonima emitido al crear la sesion.
+      - in: path
+        name: uuid_sesion
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Reglas
+      - Sesiones
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultadoReglas'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorSesion'
+          description: ''
+  /api/v1/sesiones/{uuid_sesion}/finalizar/:
+    post:
+      operationId: v1_sesiones_finalizar_create
+      description: Finaliza la sesion si todas las preguntas obligatorias tienen respuesta
+        util.
+      summary: Finalizar formulario de sesion
+      parameters:
+      - in: header
+        name: X-Sesion-Anonima
+        schema:
+          type: string
+        description: UUID de la sesion anonima asociada a la operacion.
+      - in: header
+        name: X-Token-Sesion
+        schema:
+          type: string
+        description: Token de sesion anonima emitido al crear la sesion.
+      - in: path
+        name: uuid_sesion
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Sesiones
+      - Respuestas
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinalizacionFormulario'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionFinalizacion'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorSesion'
+          description: ''
+  /api/v1/sesiones/{uuid_sesion}/preguntas/{codigo_pregunta}/evaluar-reglas/:
+    post:
+      operationId: v1_sesiones_preguntas_evaluar_reglas_create
+      description: Evalua las reglas cuya pregunta origen coincide con el codigo indicado,
+        segun las respuestas de la sesion.
+      summary: Evaluar reglas por pregunta
+      parameters:
+      - in: header
+        name: X-Sesion-Anonima
+        schema:
+          type: string
+        description: UUID de la sesion anonima asociada a la operacion.
+      - in: header
+        name: X-Token-Sesion
+        schema:
+          type: string
+        description: Token de sesion anonima emitido al crear la sesion.
+      - in: path
+        name: codigo_pregunta
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: uuid_sesion
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Reglas
+      - Sesiones
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultadoReglas'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorSesion'
+          description: ''
+  /api/v1/sesiones/{uuid_sesion}/respuestas/:
+    get:
+      operationId: v1_sesiones_respuestas_retrieve
+      description: Retorna todas las respuestas guardadas para una sesion anonima.
+      summary: Listar respuestas de sesion
+      parameters:
+      - in: header
+        name: X-Sesion-Anonima
+        schema:
+          type: string
+        description: UUID de la sesion anonima asociada a la operacion.
+      - in: header
+        name: X-Token-Sesion
+        schema:
+          type: string
+        description: Token de sesion anonima emitido al crear la sesion.
+      - in: path
+        name: uuid_sesion
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Sesiones
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestasSesion'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorSesion'
+          description: ''
+  /api/v1/sesiones/{uuid_sesion}/resumen/:
+    get:
+      operationId: v1_sesiones_resumen_retrieve
+      description: Retorna el resumen de respuestas activas de la sesion.
+      summary: Resumen de respuestas de sesion
+      parameters:
+      - in: header
+        name: X-Sesion-Anonima
+        schema:
+          type: string
+        description: UUID de la sesion anonima asociada a la operacion.
+      - in: header
+        name: X-Token-Sesion
+        schema:
+          type: string
+        description: Token de sesion anonima emitido al crear la sesion.
+      - in: path
+        name: uuid_sesion
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Sesiones
+      - Respuestas
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumenFormularioSesion'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorSesion'
+          description: ''
+  /api/v1/sesiones/{uuid_sesion}/validar-finalizacion/:
+    post:
+      operationId: v1_sesiones_validar_finalizacion_create
+      description: Verifica que todas las preguntas obligatorias de la sesion tengan
+        una respuesta util.
+      summary: Validar finalizacion de formulario
+      parameters:
+      - in: header
+        name: X-Sesion-Anonima
+        schema:
+          type: string
+        description: UUID de la sesion anonima asociada a la operacion.
+      - in: header
+        name: X-Token-Sesion
+        schema:
+          type: string
+        description: Token de sesion anonima emitido al crear la sesion.
+      - in: path
+        name: uuid_sesion
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Sesiones
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionFinalizacion'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorSesion'
+          description: ''
+  /api/v1/sincronizacion/:
+    post:
+      operationId: v1_sincronizacion_create
+      description: Procesa un lote de operaciones enviadas por un dispositivo offline.
+        Cada operacion se valida con uuid_local y version_cliente para garantizar
+        idempotencia. Los conflictos se resuelven con Last Write Wins y se registran
+        sin perder informacion. Una operacion fallida no cancela el resto del lote.
+      summary: Sincronizar lote de respuestas offline
+      parameters:
+      - in: header
+        name: X-Sesion-Anonima
+        schema:
+          type: string
+        description: UUID de la sesion anonima asociada a la operacion.
+      - in: header
+        name: X-Token-Sesion
+        schema:
+          type: string
+        description: Token de sesion anonima emitido al crear la sesion.
+      tags:
+      - Sincronizacion
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SincronizarBatchEntrada'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SincronizarBatchEntrada'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SincronizarBatchEntrada'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SincronizarBatchSalida'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorSincronizacion'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorSincronizacion'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetalleErrorSincronizacion'
+          description: ''
+components:
+  schemas:
+    AccionEnum:
+      enum:
+      - mostrar
+      - ocultar
+      - habilitar
+      - deshabilitar
+      - hacer_obligatoria
+      - hacer_opcional
+      - saltar_a_pregunta
+      - saltar_a_seccion
+      - finalizar_formulario
+      - no_aplica_formulario
+      type: string
+      description: |-
+        * `mostrar` - Mostrar
+        * `ocultar` - Ocultar
+        * `habilitar` - Habilitar
+        * `deshabilitar` - Deshabilitar
+        * `hacer_obligatoria` - Hacer obligatoria
+        * `hacer_opcional` - Hacer opcional
+        * `saltar_a_pregunta` - Saltar a pregunta
+        * `saltar_a_seccion` - Saltar a seccion
+        * `finalizar_formulario` - Finalizar formulario
+        * `no_aplica_formulario` - No aplica formulario
+    ArchivoRepositorio:
+      type: object
+      description: Serializer de metadatos de un archivo del repositorio.
+      properties:
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+        nombre_original:
+          type: string
+          maxLength: 300
+        extension:
+          type: string
+          maxLength: 20
+        mime_type:
+          type: string
+          maxLength: 150
+        tamano_bytes:
+          type: integer
+          maximum: 18446744073709551615
+          minimum: 0
+          format: int64
+        checksum_sha256:
+          type: string
+          maxLength: 64
+        tipo_archivo:
+          $ref: '#/components/schemas/TipoArchivoEnum'
+        es_publico:
+          type: boolean
+        origen:
+          $ref: '#/components/schemas/OrigenEnum'
+        estado:
+          $ref: '#/components/schemas/ArchivoRepositorioEstadoEnum'
+        descripcion:
+          type: string
+        metadatos:
+          nullable: true
+        fecha_carga:
+          type: string
+          format: date-time
+          readOnly: true
+        usuario_keycloak:
+          type: string
+          maxLength: 255
+        uuid_sesion:
+          type: string
+          format: uuid
+          nullable: true
+        url:
+          type: string
+          nullable: true
+          description: Retorna la URL de acceso al archivo si esta activo.
+          readOnly: true
+      required:
+      - checksum_sha256
+      - extension
+      - fecha_carga
+      - mime_type
+      - nombre_original
+      - origen
+      - tamano_bytes
+      - tipo_archivo
+      - url
+      - uuid
+    ArchivoRepositorioEstadoEnum:
+      enum:
+      - activo
+      - eliminado
+      - cuarentena
+      - procesando
+      type: string
+      description: |-
+        * `activo` - Activo
+        * `eliminado` - Eliminado
+        * `cuarentena` - Cuarentena
+        * `procesando` - Procesando
+    CanalEnum:
+      enum:
+      - correo
+      - sms
+      - push
+      - interna
+      - webhook
+      type: string
+      description: |-
+        * `correo` - Correo
+        * `sms` - SMS
+        * `push` - Push
+        * `interna` - Interna
+        * `webhook` - Webhook
+    Catalogo:
+      type: object
+      description: Serializer resumido para catalogos activos.
+      properties:
+        codigo:
+          type: string
+          maxLength: 100
+        nombre:
+          type: string
+          maxLength: 255
+        descripcion:
+          type: string
+        tipo_catalogo:
+          type: string
+          maxLength: 100
+        orden:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+      required:
+      - codigo
+      - nombre
+      - tipo_catalogo
+    ConfiguracionInterfazPublicaEsquema:
+      type: object
+      description: Esquema de respuesta para documentacion OpenAPI.
+      properties:
+        nombre_aplicativo:
+          type: string
+          default: AppDiversa
+        nombre_corto:
+          type: string
+          default: AppDiversa
+        descripcion_aplicativo:
+          type: string
+          default: ''
+        texto_pie_pagina:
+          type: string
+          default: ''
+        texto_titulo_seccion_encuestas:
+          type: string
+          default: ''
+        texto_descripcion_seccion_encuestas:
+          type: string
+          default: ''
+        email_soporte:
+          type: string
+          format: email
+          default: ''
+        texto_terminos_condiciones:
+          type: string
+          default: ''
+        texto_autorizacion_datos:
+          type: string
+          default: ''
+        texto_verificacion_exitosa_titulo:
+          type: string
+          default: ''
+        texto_verificacion_exitosa_cuerpo:
+          type: string
+          default: ''
+        texto_confirmacion_envio_titulo:
+          type: string
+          default: ''
+        texto_confirmacion_envio_subtitulo:
+          type: string
+          default: ''
+        meta_titulo_seo:
+          type: string
+          default: ''
+        meta_descripcion_seo:
+          type: string
+          default: ''
+        accion_lengua_senas_habilitada:
+          type: boolean
+          default: false
+        url_lengua_senas:
+          type: string
+          format: uri
+          default: ''
+        texto_lengua_senas:
+          type: string
+          default: ''
+        logo_principal:
+          type: string
+          nullable: true
+        logo_secundario:
+          type: string
+          nullable: true
+        logo_institucional:
+          type: string
+          nullable: true
+        favicon:
+          type: string
+          nullable: true
+        color_primario:
+          type: string
+          default: ''
+        color_secundario:
+          type: string
+          default: ''
+        color_acento:
+          type: string
+          default: ''
+        contenido_accesible:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ContenidoAccesible'
+    ContenidoAccesible:
+      type: object
+      description: Esquema de contenido accesible multimodal.
+      properties:
+        lectura_facil:
+          type: string
+          default: ''
+        texto_alternativo:
+          type: string
+          default: ''
+        transcripcion:
+          type: string
+          default: ''
+        archivo_audio:
+          type: string
+          nullable: true
+        archivo_video:
+          type: string
+          nullable: true
+        archivo_imagen:
+          type: string
+          nullable: true
+        archivo_lengua_senas:
+          type: string
+          nullable: true
+        metadatos: {}
+    CrearSesionAnonimaEntrada:
+      type: object
+      description: Entrada para crear o reutilizar una sesion anonima.
+      properties:
+        uuid_sesion:
+          type: string
+          format: uuid
+        uuid_formulario:
+          type: string
+          format: uuid
+        token_cliente:
+          type: string
+          default: ''
+        idioma:
+          type: string
+          default: ''
+        zona_horaria:
+          type: string
+          default: ''
+        es_offline:
+          type: boolean
+          default: false
+      required:
+      - uuid_formulario
+      - uuid_sesion
+    DetalleErrorAnalitica:
+      type: object
+      properties:
+        detalle:
+          type: string
+      required:
+      - detalle
+    DetalleErrorArchivo:
+      type: object
+      properties:
+        detalle:
+          type: string
+      required:
+      - detalle
+    DetalleErrorCatalogo:
+      type: object
+      properties:
+        detalle:
+          type: string
+      required:
+      - detalle
+    DetalleErrorExportacion:
+      type: object
+      properties:
+        detalle:
+          type: string
+      required:
+      - detalle
+    DetalleErrorFormulario:
+      type: object
+      properties:
+        detalle:
+          type: string
+      required:
+      - detalle
+    DetalleErrorNotificacion:
+      type: object
+      properties:
+        detalle:
+          type: string
+      required:
+      - detalle
+    DetalleErrorRespuesta:
+      type: object
+      properties:
+        detalle:
+          type: string
+      required:
+      - detalle
+    DetalleErrorSesion:
+      type: object
+      properties:
+        detalle:
+          type: string
+      required:
+      - detalle
+    DetalleErrorSincronizacion:
+      type: object
+      properties:
+        detalle:
+          type: string
+      required:
+      - detalle
+    Exportacion:
+      type: object
+      description: Serializer de exportaciones registradas.
+      properties:
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+        tipo:
+          $ref: '#/components/schemas/ExportacionTipoEnum'
+        estado:
+          $ref: '#/components/schemas/ExportacionEstadoEnum'
+        usuario:
+          type: string
+          maxLength: 255
+        fecha_inicio:
+          type: string
+          format: date-time
+          nullable: true
+        fecha_fin:
+          type: string
+          format: date-time
+          nullable: true
+        archivo_uuid:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        formato:
+          $ref: '#/components/schemas/FormatoEnum'
+        parametros:
+          nullable: true
+        registros_exportados:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        error:
+          type: string
+      required:
+      - archivo_uuid
+      - formato
+      - tipo
+      - uuid
+    ExportacionAnaliticaEntrada:
+      type: object
+      description: Entrada para exportacion de analitica.
+      properties:
+        formato:
+          $ref: '#/components/schemas/FormatoEnum'
+        parametros:
+          description: 'Filtros: formulario_codigo, fecha_inicio, fecha_fin, estado_sesion.'
+        usuario:
+          type: string
+          default: ''
+      required:
+      - formato
+    ExportacionCatalogosEntrada:
+      type: object
+      description: Entrada para exportacion de catalogos.
+      properties:
+        formato:
+          $ref: '#/components/schemas/FormatoEnum'
+        parametros:
+          description: 'Filtros: catalogo_codigo.'
+        usuario:
+          type: string
+          default: ''
+      required:
+      - formato
+    ExportacionEstadoEnum:
+      enum:
+      - pendiente
+      - procesando
+      - finalizada
+      - fallida
+      type: string
+      description: |-
+        * `pendiente` - Pendiente
+        * `procesando` - Procesando
+        * `finalizada` - Finalizada
+        * `fallida` - Fallida
+    ExportacionRespuestasEntrada:
+      type: object
+      description: Entrada para exportacion de respuestas.
+      properties:
+        formato:
+          $ref: '#/components/schemas/FormatoEnum'
+        parametros:
+          description: 'Filtros: formulario_codigo, version, fecha_inicio, fecha_fin,
+            estado_sesion, idioma.'
+        usuario:
+          type: string
+          default: ''
+      required:
+      - formato
+    ExportacionTipoEnum:
+      enum:
+      - respuestas
+      - catalogos
+      - analitica
+      type: string
+      description: |-
+        * `respuestas` - Respuestas
+        * `catalogos` - Catalogos
+        * `analitica` - Analitica
+    FinalizacionFormulario:
+      type: object
+      description: Resultado de finalizacion exitosa de formulario.
+      properties:
+        estado:
+          type: string
+        mensaje:
+          type: string
+        resumen:
+          $ref: '#/components/schemas/ResumenFormularioSesion'
+      required:
+      - estado
+      - mensaje
+      - resumen
+    FormatoEnum:
+      enum:
+      - csv
+      - xlsx
+      - json
+      - sql
+      - pdf
+      - ods
+      type: string
+      description: |-
+        * `csv` - CSV
+        * `xlsx` - Excel
+        * `json` - JSON
+        * `sql` - SQL
+        * `pdf` - PDF
+        * `ods` - ODS
+    FormularioDisponible:
+      type: object
+      description: Serializer resumido para formularios disponibles.
+      properties:
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+        codigo:
+          type: string
+          maxLength: 50
+        nombre:
+          type: string
+          maxLength: 255
+        descripcion:
+          type: string
+        tipo_formulario:
+          $ref: '#/components/schemas/TipoFormularioEnum'
+        tiempo_estimado_minutos:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          nullable: true
+        fecha_inicio:
+          type: string
+          format: date-time
+          nullable: true
+        fecha_fin:
+          type: string
+          format: date-time
+          nullable: true
+        permite_anonimo:
+          type: boolean
+        permite_registro_final:
+          type: boolean
+        permite_multiples_respuestas:
+          type: boolean
+        permite_offline:
+          type: boolean
+        imagen_portada:
+          type: string
+          nullable: true
+          description: Retorna la URL de la imagen de portada si existe.
+          readOnly: true
+      required:
+      - codigo
+      - imagen_portada
+      - nombre
+      - tipo_formulario
+      - uuid
+    FormularioEstructura:
+      type: object
+      description: Serializer de la estructura completa de un formulario publicado.
+      properties:
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+        codigo:
+          type: string
+          readOnly: true
+        nombre:
+          type: string
+          readOnly: true
+        descripcion:
+          type: string
+          readOnly: true
+        introduccion:
+          type: string
+          readOnly: true
+        objetivo:
+          type: string
+          readOnly: true
+        tipo_formulario:
+          type: string
+          readOnly: true
+        imagen_portada:
+          type: string
+          readOnly: true
+          nullable: true
+        version:
+          allOf:
+          - $ref: '#/components/schemas/FormularioVersionResumen'
+          readOnly: true
+        textos:
+          type: array
+          items:
+            $ref: '#/components/schemas/TextoFormulario'
+          readOnly: true
+        secciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeccionFormulario'
+          readOnly: true
+      required:
+      - codigo
+      - descripcion
+      - imagen_portada
+      - introduccion
+      - nombre
+      - objetivo
+      - secciones
+      - textos
+      - tipo_formulario
+      - uuid
+      - version
+    FormularioResumen:
+      type: object
+      description: Datos resumidos del formulario en una sesion.
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        codigo:
+          type: string
+        nombre:
+          type: string
+      required:
+      - codigo
+      - nombre
+      - uuid
+    FormularioVersionResumen:
+      type: object
+      description: Serializer resumido de la version publicada.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        numero_version:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+      required:
+      - id
+      - numero_version
+    GuardarRespuestaEntrada:
+      type: object
+      description: Entrada para guardar o actualizar una respuesta.
+      properties:
+        uuid_sesion:
+          type: string
+          format: uuid
+        codigo_pregunta:
+          type: string
+          maxLength: 50
+        valor: {}
+        observacion:
+          type: string
+          default: ''
+        origen_respuesta:
+          allOf:
+          - $ref: '#/components/schemas/OrigenRespuestaEnum'
+          default: web
+        fecha_respuesta_cliente:
+          type: string
+          format: date-time
+          nullable: true
+        token_cliente:
+          type: string
+          default: ''
+      required:
+      - codigo_pregunta
+      - uuid_sesion
+      - valor
+    GuardarRespuestaSalida:
+      type: object
+      description: Salida tras guardar o actualizar una respuesta.
+      properties:
+        uuid_sesion:
+          type: string
+          format: uuid
+        codigo_pregunta:
+          type: string
+        version_respuesta:
+          type: integer
+        origen_respuesta:
+          type: string
+        requiere_sincronizacion:
+          type: boolean
+        esta_eliminado:
+          type: boolean
+        reglas:
+          type: object
+          additionalProperties: {}
+      required:
+      - codigo_pregunta
+      - esta_eliminado
+      - origen_respuesta
+      - requiere_sincronizacion
+      - uuid_sesion
+      - version_respuesta
+    ItemCatalogo:
+      type: object
+      description: Serializer para items de un catalogo.
+      properties:
+        codigo:
+          type: string
+          maxLength: 100
+        codigo_catalogo:
+          type: string
+          readOnly: true
+        nombre:
+          type: string
+          maxLength: 255
+        descripcion:
+          type: string
+        valor:
+          type: string
+          maxLength: 255
+        codigo_padre:
+          type: string
+          readOnly: true
+          nullable: true
+        codigo_externo:
+          type: string
+          maxLength: 100
+        metadatos:
+          nullable: true
+        orden:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        esta_activo:
+          type: boolean
+      required:
+      - codigo
+      - codigo_catalogo
+      - codigo_padre
+      - nombre
+    Notificacion:
+      type: object
+      description: Serializer de notificaciones registradas.
+      properties:
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+        codigo_plantilla:
+          type: string
+          readOnly: true
+          nullable: true
+        canal:
+          $ref: '#/components/schemas/CanalEnum'
+        destinatario:
+          type: string
+          maxLength: 500
+        estado:
+          $ref: '#/components/schemas/NotificacionEstadoEnum'
+        fecha_programada:
+          type: string
+          format: date-time
+          nullable: true
+        fecha_envio:
+          type: string
+          format: date-time
+          nullable: true
+        asunto_generado:
+          type: string
+          maxLength: 300
+        contenido_generado:
+          type: string
+        variables_utilizadas:
+          nullable: true
+        respuesta_proveedor:
+          nullable: true
+        numero_intentos:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        error_envio:
+          type: string
+      required:
+      - canal
+      - codigo_plantilla
+      - destinatario
+      - uuid
+    NotificacionEstadoEnum:
+      enum:
+      - pendiente
+      - procesando
+      - enviada
+      - fallida
+      - cancelada
+      type: string
+      description: |-
+        * `pendiente` - Pendiente
+        * `procesando` - Procesando
+        * `enviada` - Enviada
+        * `fallida` - Fallida
+        * `cancelada` - Cancelada
+    OpcionRespuesta:
+      type: object
+      description: Serializer para opciones de respuesta.
+      properties:
+        codigo:
+          type: string
+          maxLength: 50
+        etiqueta:
+          type: string
+          maxLength: 500
+        valor:
+          type: string
+          maxLength: 255
+        tooltip:
+          type: string
+        orden:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        es_excluyente:
+          type: boolean
+        activa_otro:
+          type: boolean
+      required:
+      - codigo
+      - etiqueta
+      - orden
+      - valor
+    OperacionSincronizacionEntrada:
+      type: object
+      description: Operacion individual dentro de un lote de sincronizacion.
+      properties:
+        uuid_local:
+          type: string
+          format: uuid
+        codigo_pregunta:
+          type: string
+          maxLength: 100
+        valor: {}
+        version_cliente:
+          type: integer
+          minimum: 0
+        fecha_cliente:
+          type: string
+          format: date-time
+        checksum:
+          type: string
+          default: ''
+          maxLength: 128
+      required:
+      - codigo_pregunta
+      - fecha_cliente
+      - uuid_local
+      - valor
+      - version_cliente
+    OperadorEnum:
+      enum:
+      - equals
+      - not_equals
+      - contains
+      - gt
+      - lt
+      - in
+      type: string
+      description: |-
+        * `equals` - Equals
+        * `not_equals` - Not equals
+        * `contains` - Contains
+        * `gt` - Greater than
+        * `lt` - Less than
+        * `in` - In
+    OrigenEnum:
+      enum:
+      - formulario
+      - pregunta
+      - respuesta
+      - internacionalizacion
+      - configuracion
+      - catalogo
+      - notificacion
+      - otro
+      type: string
+      description: |-
+        * `formulario` - Formulario
+        * `pregunta` - Pregunta
+        * `respuesta` - Respuesta
+        * `internacionalizacion` - Internacionalizacion
+        * `configuracion` - Configuracion
+        * `catalogo` - Catalogo
+        * `notificacion` - Notificacion
+        * `otro` - Otro
+    OrigenRespuestaEnum:
+      enum:
+      - web
+      - offline
+      - sincronizacion
+      type: string
+      description: |-
+        * `web` - Web
+        * `offline` - Offline
+        * `sincronizacion` - Sincronizacion
+    Pregunta:
+      type: object
+      description: Serializer para preguntas con relaciones anidadas.
+      properties:
+        codigo:
+          type: string
+          maxLength: 50
+        texto:
+          type: string
+        descripcion:
+          type: string
+        tooltip:
+          type: string
+        tipo_pregunta:
+          $ref: '#/components/schemas/TipoPreguntaEnum'
+        es_obligatoria:
+          type: boolean
+        es_pregunta_filtro:
+          type: boolean
+        permite_otro:
+          type: boolean
+        permite_observacion:
+          type: boolean
+        orden:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        longitud_minima:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          nullable: true
+        longitud_maxima:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          nullable: true
+        valor_minimo:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          nullable: true
+        valor_maximo:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,16}(?:\.\d{0,2})?$
+          nullable: true
+        expresion_regular:
+          type: string
+          maxLength: 500
+        mensaje_error:
+          type: string
+        usa_catalogo:
+          type: boolean
+        catalogo_asociado:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
+          description: Retorna metadata del catalogo asociado para consumo del frontend.
+          readOnly: true
+        pregunta_padre_catalogo:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
+          description: Retorna metadata de la pregunta padre de catalogo si existe.
+          readOnly: true
+        permite_busqueda_catalogo:
+          type: boolean
+        limite_items_catalogo:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          nullable: true
+        fuente_opciones:
+          type: string
+          description: Retorna el origen de opciones de la pregunta.
+          readOnly: true
+        opciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpcionRespuesta'
+          readOnly: true
+        filas_matriz:
+          type: array
+          items:
+            $ref: '#/components/schemas/PreguntaMatrizFila'
+          readOnly: true
+        columnas_matriz:
+          type: array
+          items:
+            $ref: '#/components/schemas/PreguntaMatrizColumna'
+          readOnly: true
+        reglas_origen:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReglaPregunta'
+          readOnly: true
+      required:
+      - catalogo_asociado
+      - codigo
+      - columnas_matriz
+      - filas_matriz
+      - fuente_opciones
+      - opciones
+      - orden
+      - pregunta_padre_catalogo
+      - reglas_origen
+      - texto
+      - tipo_pregunta
+    PreguntaMatrizColumna:
+      type: object
+      description: Serializer para columnas de preguntas tipo matriz.
+      properties:
+        codigo:
+          type: string
+          maxLength: 50
+        etiqueta:
+          type: string
+          maxLength: 500
+        valor:
+          type: string
+          maxLength: 100
+        orden:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+      required:
+      - codigo
+      - etiqueta
+      - orden
+      - valor
+    PreguntaMatrizFila:
+      type: object
+      description: Serializer para filas de preguntas tipo matriz.
+      properties:
+        codigo:
+          type: string
+          maxLength: 50
+        etiqueta:
+          type: string
+          maxLength: 500
+        orden:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+      required:
+      - codigo
+      - etiqueta
+      - orden
+    PreguntaPendiente:
+      type: object
+      description: Detalle de una pregunta obligatoria pendiente.
+      properties:
+        codigo:
+          type: string
+        texto:
+          type: string
+        seccion_codigo:
+          type: string
+        seccion_titulo:
+          type: string
+        orden:
+          type: integer
+      required:
+      - codigo
+      - orden
+      - seccion_codigo
+      - seccion_titulo
+      - texto
+    ProbarNotificacionEntrada:
+      type: object
+      description: Entrada para generar una notificacion de prueba.
+      properties:
+        codigo_plantilla:
+          type: string
+          maxLength: 100
+        destinatario:
+          type: string
+          maxLength: 500
+        variables: {}
+      required:
+      - codigo_plantilla
+      - destinatario
+    ReglaPregunta:
+      type: object
+      description: Serializer para reglas condicionales de preguntas.
+      properties:
+        operador:
+          $ref: '#/components/schemas/OperadorEnum'
+        valor_esperado: {}
+        accion:
+          $ref: '#/components/schemas/AccionEnum'
+        mensaje:
+          type: string
+        pregunta_destino_codigo:
+          type: string
+          nullable: true
+          description: Retorna el codigo de la pregunta destino si existe.
+          readOnly: true
+        seccion_destino_codigo:
+          type: string
+          nullable: true
+          description: Retorna el codigo de la seccion destino si existe.
+          readOnly: true
+      required:
+      - accion
+      - operador
+      - pregunta_destino_codigo
+      - seccion_destino_codigo
+      - valor_esperado
+    Respuesta:
+      type: object
+      description: Serializer de una respuesta almacenada.
+      properties:
+        codigo_pregunta:
+          type: string
+          readOnly: true
+        tipo_pregunta:
+          type: string
+          readOnly: true
+        valor_numero:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,4})?$
+          nullable: true
+        valor_texto:
+          type: string
+        valor_json:
+          nullable: true
+        valor_booleano:
+          type: boolean
+          nullable: true
+        valor_fecha:
+          type: string
+          format: date
+          nullable: true
+        valor_hora:
+          type: string
+          format: time
+          nullable: true
+        valor_fecha_hora:
+          type: string
+          format: date-time
+          nullable: true
+        origen_respuesta:
+          $ref: '#/components/schemas/OrigenRespuestaEnum'
+        version_respuesta:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        fecha_respuesta_cliente:
+          type: string
+          format: date-time
+          nullable: true
+        fecha_respuesta_servidor:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - codigo_pregunta
+      - fecha_respuesta_servidor
+      - tipo_pregunta
+    RespuestaAnalitica:
+      type: object
+      description: Formato plano de una respuesta para consumo analitico.
+      properties:
+        uuid_sesion:
+          type: string
+          format: uuid
+        estado_sesion:
+          type: string
+        fecha_inicio_sesion:
+          type: string
+          nullable: true
+        fecha_ultima_actividad:
+          type: string
+          nullable: true
+        formulario_uuid:
+          type: string
+          format: uuid
+        formulario_codigo:
+          type: string
+        formulario_nombre:
+          type: string
+        tipo_formulario:
+          type: string
+        numero_version:
+          type: integer
+        seccion_codigo:
+          type: string
+        seccion_titulo:
+          type: string
+        pregunta_codigo:
+          type: string
+        pregunta_texto:
+          type: string
+        tipo_pregunta:
+          type: string
+        usa_catalogo:
+          type: boolean
+        catalogo_codigo:
+          type: string
+          nullable: true
+        catalogo_nombre:
+          type: string
+          nullable: true
+        respuesta_valor:
+          nullable: true
+        respuesta_texto:
+          type: string
+        respuesta_numero:
+          type: string
+        respuesta_json:
+          nullable: true
+        observacion:
+          type: string
+        origen_respuesta:
+          type: string
+        version_respuesta:
+          type: integer
+        fecha_respuesta_cliente:
+          type: string
+          nullable: true
+        fecha_respuesta_servidor:
+          type: string
+          nullable: true
+        es_anonima:
+          type: boolean
+        es_offline:
+          type: boolean
+      required:
+      - catalogo_codigo
+      - catalogo_nombre
+      - es_anonima
+      - es_offline
+      - estado_sesion
+      - fecha_inicio_sesion
+      - fecha_respuesta_cliente
+      - fecha_respuesta_servidor
+      - fecha_ultima_actividad
+      - formulario_codigo
+      - formulario_nombre
+      - formulario_uuid
+      - numero_version
+      - observacion
+      - origen_respuesta
+      - pregunta_codigo
+      - pregunta_texto
+      - respuesta_json
+      - respuesta_numero
+      - respuesta_texto
+      - respuesta_valor
+      - seccion_codigo
+      - seccion_titulo
+      - tipo_formulario
+      - tipo_pregunta
+      - usa_catalogo
+      - uuid_sesion
+      - version_respuesta
+    RespuestasSesion:
+      type: object
+      description: Serializer de respuestas agrupadas por sesion.
+      properties:
+        uuid_sesion:
+          type: string
+          format: uuid
+        estado:
+          type: string
+        respuestas:
+          type: array
+          items:
+            $ref: '#/components/schemas/Respuesta'
+      required:
+      - estado
+      - respuestas
+      - uuid_sesion
+    ResultadoOperacionConflicto:
+      type: object
+      description: Detalle de conflicto en una operacion del lote.
+      properties:
+        uuid_local:
+          type: string
+        mensaje:
+          type: string
+          nullable: true
+        respuesta_id:
+          type: integer
+          nullable: true
+      required:
+      - mensaje
+      - respuesta_id
+      - uuid_local
+    ResultadoOperacionError:
+      type: object
+      description: Detalle de error en una operacion del lote.
+      properties:
+        uuid_local:
+          type: string
+        mensaje:
+          type: string
+          nullable: true
+      required:
+      - mensaje
+      - uuid_local
+    ResultadoReglas:
+      type: object
+      description: Serializer del resultado de evaluacion de reglas.
+      properties:
+        preguntas_ocultas:
+          type: array
+          items:
+            type: string
+        preguntas_visibles:
+          type: array
+          items:
+            type: string
+        preguntas_deshabilitadas:
+          type: array
+          items:
+            type: string
+        preguntas_habilitadas:
+          type: array
+          items:
+            type: string
+        preguntas_obligatorias:
+          type: array
+          items:
+            type: string
+        preguntas_opcionales:
+          type: array
+          items:
+            type: string
+        saltar_a_pregunta:
+          type: string
+          nullable: true
+        saltar_a_seccion:
+          type: string
+          nullable: true
+        finalizar_formulario:
+          type: boolean
+          default: false
+        no_aplica_formulario:
+          type: boolean
+          default: false
+        mensajes:
+          type: array
+          items:
+            type: string
+    ResumenFormularioSesion:
+      type: object
+      description: Resumen completo de respuestas de una sesion.
+      properties:
+        uuid_sesion:
+          type: string
+          format: uuid
+        estado:
+          type: string
+        formulario:
+          $ref: '#/components/schemas/FormularioResumen'
+        version:
+          $ref: '#/components/schemas/VersionResumen'
+        respuestas:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResumenRespuesta'
+      required:
+      - estado
+      - formulario
+      - respuestas
+      - uuid_sesion
+      - version
+    ResumenRespuesta:
+      type: object
+      description: Item de respuesta dentro del resumen de sesion.
+      properties:
+        seccion_codigo:
+          type: string
+        seccion_titulo:
+          type: string
+        pregunta_codigo:
+          type: string
+        pregunta_texto:
+          type: string
+        tipo_pregunta:
+          type: string
+        valor: {}
+        observacion:
+          type: string
+      required:
+      - observacion
+      - pregunta_codigo
+      - pregunta_texto
+      - seccion_codigo
+      - seccion_titulo
+      - tipo_pregunta
+      - valor
+    SaludRespuesta:
+      type: object
+      properties:
+        estado:
+          type: string
+      required:
+      - estado
+    SeccionFormulario:
+      type: object
+      description: Serializer para secciones con preguntas anidadas.
+      properties:
+        codigo:
+          type: string
+          maxLength: 50
+        titulo:
+          type: string
+          maxLength: 255
+        descripcion:
+          type: string
+        texto_ayuda:
+          type: string
+        orden:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        preguntas:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pregunta'
+          readOnly: true
+      required:
+      - codigo
+      - orden
+      - preguntas
+      - titulo
+    SesionAnonima:
+      type: object
+      description: Serializer de respuesta para sesion anonima.
+      properties:
+        uuid_sesion:
+          type: string
+          format: uuid
+        estado:
+          $ref: '#/components/schemas/SesionAnonimaEstadoEnum'
+        token_cliente:
+          type: string
+          maxLength: 255
+    SesionAnonimaEstadoEnum:
+      enum:
+      - iniciada
+      - en_proceso
+      - finalizada
+      - abandonada
+      - sincronizada
+      type: string
+      description: |-
+        * `iniciada` - Iniciada
+        * `en_proceso` - En proceso
+        * `finalizada` - Finalizada
+        * `abandonada` - Abandonada
+        * `sincronizada` - Sincronizada
+    SincronizarBatchEntrada:
+      type: object
+      description: Entrada del endpoint de sincronizacion por lotes.
+      properties:
+        uuid_sesion:
+          type: string
+          format: uuid
+        token_cliente:
+          type: string
+          maxLength: 255
+        dispositivo:
+          type: string
+          maxLength: 150
+        version_app:
+          type: string
+          maxLength: 50
+        operaciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperacionSincronizacionEntrada'
+      required:
+      - dispositivo
+      - operaciones
+      - token_cliente
+      - uuid_sesion
+      - version_app
+    SincronizarBatchSalida:
+      type: object
+      description: Respuesta agregada del procesamiento de un lote.
+      properties:
+        operaciones_procesadas:
+          type: integer
+        operaciones_actualizadas:
+          type: integer
+        duplicadas:
+          type: integer
+        conflictos:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultadoOperacionConflicto'
+        errores:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultadoOperacionError'
+      required:
+      - conflictos
+      - duplicadas
+      - errores
+      - operaciones_actualizadas
+      - operaciones_procesadas
+    SubirArchivoEntrada:
+      type: object
+      description: Entrada para subir un archivo al repositorio.
+      properties:
+        archivo:
+          type: string
+          format: uri
+        tipo_archivo:
+          $ref: '#/components/schemas/TipoArchivoEnum'
+        origen:
+          $ref: '#/components/schemas/OrigenEnum'
+        descripcion:
+          type: string
+          default: ''
+        es_publico:
+          type: boolean
+          default: false
+        metadatos: {}
+        usuario_keycloak:
+          type: string
+          default: ''
+        uuid_sesion:
+          type: string
+          format: uuid
+          nullable: true
+        token_cliente:
+          type: string
+          default: ''
+      required:
+      - archivo
+      - origen
+      - tipo_archivo
+    TextoFormulario:
+      type: object
+      description: Serializer para textos parametrizables de una version.
+      properties:
+        tipo:
+          $ref: '#/components/schemas/TextoFormularioTipoEnum'
+        titulo:
+          type: string
+          maxLength: 255
+        contenido:
+          type: string
+        orden:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+      required:
+      - contenido
+      - tipo
+    TextoFormularioTipoEnum:
+      enum:
+      - introduccion
+      - definicion
+      - consentimiento
+      - terminos
+      - agradecimiento
+      - ayuda
+      - cierre
+      - consentimiento_datos
+      - confirmacion_envio
+      - verificacion_exitosa
+      - autorizacion_datos
+      - resumen_respuestas
+      - registro_opcional
+      - envio_correo
+      - contacto
+      - ayuda_accesibilidad
+      type: string
+      description: |-
+        * `introduccion` - Introduccion
+        * `definicion` - Definicion
+        * `consentimiento` - Consentimiento
+        * `terminos` - Terminos
+        * `agradecimiento` - Agradecimiento
+        * `ayuda` - Ayuda
+        * `cierre` - Cierre
+        * `consentimiento_datos` - Consentimiento de datos
+        * `confirmacion_envio` - Confirmacion de envio
+        * `verificacion_exitosa` - Verificacion exitosa
+        * `autorizacion_datos` - Autorizacion de datos
+        * `resumen_respuestas` - Resumen de respuestas
+        * `registro_opcional` - Registro opcional
+        * `envio_correo` - Envio de correo
+        * `contacto` - Contacto
+        * `ayuda_accesibilidad` - Ayuda de accesibilidad
+    TipoArchivoEnum:
+      enum:
+      - imagen
+      - documento
+      - audio
+      - video
+      - firma
+      - multimedia
+      - archivo_general
+      type: string
+      description: |-
+        * `imagen` - Imagen
+        * `documento` - Documento
+        * `audio` - Audio
+        * `video` - Video
+        * `firma` - Firma
+        * `multimedia` - Multimedia
+        * `archivo_general` - Archivo general
+    TipoFormularioEnum:
+      enum:
+      - encuesta
+      - caracterizacion
+      - inscripcion
+      - registro
+      - censo
+      - evaluacion
+      type: string
+      description: |-
+        * `encuesta` - Encuesta
+        * `caracterizacion` - Caracterizacion
+        * `inscripcion` - Inscripcion
+        * `registro` - Registro
+        * `censo` - Censo
+        * `evaluacion` - Evaluacion
+    TipoPreguntaEnum:
+      enum:
+      - texto_corto
+      - texto_largo
+      - numero
+      - fecha
+      - hora
+      - fecha_hora
+      - radio
+      - checkbox
+      - select
+      - select_multiple
+      - autocomplete
+      - likert
+      - matriz
+      - archivo
+      - firma
+      - geolocalizacion
+      - audio
+      - video
+      type: string
+      description: |-
+        * `texto_corto` - Texto corto
+        * `texto_largo` - Texto largo
+        * `numero` - Numero
+        * `fecha` - Fecha
+        * `hora` - Hora
+        * `fecha_hora` - Fecha y hora
+        * `radio` - Radio
+        * `checkbox` - Checkbox
+        * `select` - Select
+        * `select_multiple` - Select multiple
+        * `autocomplete` - Autocomplete
+        * `likert` - Likert
+        * `matriz` - Matriz
+        * `archivo` - Archivo
+        * `firma` - Firma
+        * `geolocalizacion` - Geolocalizacion
+        * `audio` - Audio
+        * `video` - Video
+    TraduccionContenido:
+      type: object
+      description: Serializer de traducciones con contenido accesible multimodal.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        codigo_idioma:
+          type: string
+          readOnly: true
+        entidad:
+          type: string
+          maxLength: 100
+        entidad_uuid:
+          type: string
+          format: uuid
+        campo:
+          type: string
+          maxLength: 100
+        valor_traducido:
+          type: string
+        lectura_facil:
+          type: string
+        texto_alternativo:
+          type: string
+        transcripcion:
+          type: string
+        archivo_audio:
+          type: string
+          nullable: true
+          description: Retorna la URL del archivo de audio si existe.
+          readOnly: true
+        archivo_video:
+          type: string
+          nullable: true
+          description: Retorna la URL del archivo de video si existe.
+          readOnly: true
+        archivo_imagen:
+          type: string
+          nullable: true
+          description: Retorna la URL de la imagen si existe.
+          readOnly: true
+        archivo_lengua_senas:
+          type: string
+          nullable: true
+          description: Retorna la URL del archivo de lengua de senas si existe.
+          readOnly: true
+        metadatos:
+          nullable: true
+        esta_activa:
+          type: boolean
+      required:
+      - archivo_audio
+      - archivo_imagen
+      - archivo_lengua_senas
+      - archivo_video
+      - campo
+      - codigo_idioma
+      - entidad
+      - entidad_uuid
+      - id
+      - valor_traducido
+    ValidacionFinalizacion:
+      type: object
+      description: Resultado de la validacion previa a finalizar.
+      properties:
+        es_valido:
+          type: boolean
+        total_pendientes:
+          type: integer
+        preguntas_pendientes:
+          type: array
+          items:
+            $ref: '#/components/schemas/PreguntaPendiente'
+      required:
+      - es_valido
+      - preguntas_pendientes
+      - total_pendientes
+    VersionResumen:
+      type: object
+      description: Datos resumidos de la version del formulario.
+      properties:
+        numero_version:
+          type: integer
+      required:
+      - numero_version

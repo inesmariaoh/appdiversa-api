@@ -1,0 +1,190 @@
+---
+description: Reglas de desarrollo obligatorias para AppDiversa API - motor de formularios parametrizables
+alwaysApply: true
+---
+
+# Regla General de Desarrollo
+
+Antes de escribir cualquier línea de código, analizar si la solución será reutilizable para cualquier formulario del sistema.
+
+Está prohibido implementar soluciones específicas para una encuesta, formulario, pregunta o flujo concreto.
+
+Toda funcionalidad debe diseñarse para que pueda reutilizarse mediante parametrización desde la base de datos y el administrador Django, sin requerir modificaciones en el código fuente.
+
+## Calidad SonarQube (Obligatorio)
+
+Todo el código nuevo o modificado debe desarrollarse para obtener calificación **A** en SonarQube en Mantenibilidad, Confiabilidad, Seguridad y Cobertura.
+
+Es obligatorio:
+
+- No introducir Code Smells.
+- No introducir Bugs.
+- No introducir Vulnerabilidades.
+- No introducir Hotspots de Seguridad sin justificación.
+- No introducir Duplicación de código.
+- No reducir la cobertura de pruebas existente.
+- No aumentar la deuda técnica.
+
+Antes de finalizar cualquier cambio, revisar mentalmente que el código cumpliría las reglas de SonarQube para Python, Django y TypeScript.
+
+## Complejidad Cognitiva
+
+- Ningún método nuevo debe superar una complejidad cognitiva de 15.
+- Si una función empieza a crecer, dividirla inmediatamente.
+- Preferir funciones pequeñas con una única responsabilidad.
+- Evitar múltiples niveles de if, else, try, for y while anidados.
+- Reemplazar condicionales repetitivos por estrategias, diccionarios o clases especializadas cuando sea apropiado.
+
+## Tamaño de funciones y métodos
+
+- Máximo recomendado: 40 líneas por función.
+- Máximo recomendado: 5 parámetros.
+- Si una función requiere más parámetros, encapsularlos en un objeto o dataclass.
+- Evitar funciones que mezclen validación, negocio y persistencia.
+
+## Variables
+
+- No declarar variables que no se utilicen.
+- No reutilizar variables para distintos propósitos.
+- Declarar las variables lo más cerca posible de su uso.
+- Evitar nombres genéricos como: data, item, temp, obj, value, response2.
+- Preferir nombres descriptivos del dominio.
+
+## Imports
+
+- Eliminar imports no utilizados.
+- No usar imports con `*`.
+- Agrupar imports según PEP8: estándar, terceros, proyecto.
+- Evitar dependencias circulares.
+
+## Valores mágicos
+
+- No utilizar números mágicos en el código.
+- Declarar constantes con nombres descriptivos.
+- Las expresiones regulares complejas también deben declararse como constantes reutilizables.
+
+## Literales repetidos
+
+- Evitar repetir cadenas de texto en múltiples lugares.
+- Centralizar: mensajes, códigos, estados, tipos, permisos, nombres de eventos.
+
+## Manejo de valores nulos
+
+- Validar explícitamente valores None.
+- No asumir que una consulta siempre retorna un objeto.
+- Utilizar Optional cuando corresponda.
+- Evitar múltiples comprobaciones repetidas del mismo objeto.
+
+## Manejo de excepciones
+
+- Nunca usar `except:`.
+- Nunca capturar Exception salvo que exista una justificación técnica.
+- Capturar únicamente excepciones específicas.
+- Nunca dejar `pass` dentro de un except.
+- Toda excepción debe: registrarse, manejarse, relanzarse cuando corresponda.
+
+## ORM Django
+
+- Nunca hacer consultas dentro de ciclos si pueden resolverse previamente.
+- Utilizar select_related, prefetch_related, only, defer, annotate cuando corresponda.
+- Evitar consultas N+1.
+- Evitar count() seguido de exists().
+- Evitar consultas duplicadas.
+
+## Serializers
+
+- Mantener serializers pequeños.
+- La lógica de negocio NO pertenece al serializer.
+- El serializer únicamente debe: validar, transformar, serializar.
+- Toda regla de negocio debe vivir en servicios.
+
+## Views
+
+Las vistas deben ser delgadas. Una vista solamente debe:
+
+1. Recibir request
+2. Validar permisos
+3. Invocar servicio
+4. Retornar respuesta
+
+No debe contener lógica de negocio.
+
+## Servicios
+
+Toda lógica de negocio debe implementarse en servicios especializados.
+
+Los servicios deben:
+
+- Tener una única responsabilidad
+- Ser reutilizables
+- Ser fácilmente testeables
+- Tener tipado completo
+- No depender del framework cuando sea posible
+
+## Modelos
+
+Los modelos únicamente deben contener:
+
+- Estructura
+- Relaciones
+- Propiedades simples
+- Métodos de dominio muy pequeños
+
+No colocar lógica compleja en modelos.
+
+## Transacciones
+
+Cuando una operación modifique más de una tabla relacionada, usar siempre `transaction.atomic()` para garantizar consistencia.
+
+## Logging
+
+- No usar `print()`.
+- Utilizar logging.
+- No registrar: contraseñas, JWT, tokens, headers completos, payloads sensibles, información personal.
+
+## Type Hints
+
+Todo nuevo código debe usar type hints en: funciones, servicios, helpers, utilidades, validadores, tasks, managers, selectores.
+
+## Pruebas
+
+Toda funcionalidad nueva debe incluir pruebas. Como mínimo:
+
+- Caso exitoso
+- Caso de error
+- Caso borde
+- Caso de permisos
+- Caso de validación
+
+Se debe tener cobertura > 90% del código.
+
+## Motor de Formularios
+
+El frontend nunca tendrá preguntas codificadas manualmente.
+
+Toda la estructura debe provenir del backend: Formulario, Versión, Secciones, Preguntas, Opciones, Reglas, Tooltips, Textos, Consentimientos, Matrices, Configuraciones.
+
+El backend debe ser completamente parametrizable desde Django Admin.
+
+No crear lógica específica para una encuesta determinada.
+
+Todo debe desarrollarse pensando en un motor reutilizable de formularios.
+
+## Operación Offline
+
+- La fuente oficial de datos siempre será MySQL.
+- IndexedDB únicamente almacenará temporalmente: estructura del formulario, respuestas parciales, cola de sincronización, estado de sincronización.
+- El backend nunca dependerá de IndexedDB.
+- Toda sincronización debe ser idempotente usando uuid_local para evitar duplicados.
+
+## Convenciones de nombres
+
+- No se deben usar tildes ni la letra ñ en: nombres de variables, funciones, clases, tablas, modelos, identificadores técnicos.
+- El uso de tildes y ñ solo está permitido en: textos, strings, mensajes visibles al usuario, comentarios.
+
+## Comentarios en el código
+
+- Los comentarios deben redactarse siempre en tercera persona, en español con buena ortografía.
+- No se deben escribir instrucciones directas.
+- Los comentarios deben ser exclusivamente aclaratorios o descriptivos del comportamiento.
+- No mostrar tipo de error ni mensajes del sistema.

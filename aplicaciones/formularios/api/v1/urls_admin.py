@@ -1,0 +1,219 @@
+"""
+Rutas administrativas de formularios.
+"""
+
+from django.urls import path
+
+from aplicaciones.formularios.api.v1.admin_views import (
+    FormularioAdminDetalleView,
+    FormularioAdminEstructuraView,
+    FormularioTextosAdminView,
+    FormularioVersionCerrarView,
+    FormularioVersionPublicarView,
+    FormularioVersionesAdminView,
+    FormulariosAdminListCreateView,
+    OpcionAdminDetalleView,
+    PreguntaAdminDetalleView,
+    PreguntaDuplicarView,
+    PreguntaOpcionesAdminView,
+    PreguntaReglasAdminView,
+    PreguntasReordenarView,
+    ReglaAdminDetalleView,
+    SeccionAdminDetalleView,
+    SeccionPreguntasAdminView,
+    TextoAdminDetalleView,
+    VersionSeccionesAdminView,
+)
+from aplicaciones.formularios.api.v1.admin_views_formulario import (
+    FormularioCerrarAdminView,
+    FormularioOpcionDetalleAdminView,
+    FormularioOpcionesReordenarAdminView,
+    FormularioPreguntaDetalleAdminView,
+    FormularioPreguntaDuplicarAdminView,
+    FormularioPreguntaOpcionesAdminView,
+    FormularioPreguntasAdminView,
+    FormularioPreguntasReordenarAdminView,
+    FormularioPublicarAdminView,
+    FormularioReglaDetalleAdminView,
+    FormularioReglasAdminView,
+    FormularioSeccionDetalleAdminView,
+    FormularioSeccionesAdminView,
+    FormularioSeccionesReordenarAdminView,
+)
+
+urlpatterns = [
+    path("", FormulariosAdminListCreateView.as_view(), name="admin-formularios-list"),
+    path(
+        "<int:formulario_id>/",
+        FormularioAdminDetalleView.as_view(),
+        name="admin-formularios-detalle",
+    ),
+    path(
+        "<int:formulario_id>/versiones/",
+        FormularioVersionesAdminView.as_view(),
+        name="admin-formularios-versiones",
+    ),
+    path(
+        "<int:formulario_id>/estructura/",
+        FormularioAdminEstructuraView.as_view(),
+        name="admin-formularios-estructura",
+    ),
+    path(
+        "<int:formulario_id>/publicar/",
+        FormularioPublicarAdminView.as_view(),
+        name="admin-formularios-publicar",
+    ),
+    path(
+        "<int:formulario_id>/cerrar/",
+        FormularioCerrarAdminView.as_view(),
+        name="admin-formularios-cerrar",
+    ),
+    path(
+        "<int:formulario_id>/reglas/",
+        FormularioReglasAdminView.as_view(),
+        name="admin-formularios-reglas",
+    ),
+    path(
+        "<int:formulario_id>/reglas/<int:regla_id>/",
+        FormularioReglaDetalleAdminView.as_view(),
+        name="admin-formularios-regla-detalle",
+    ),
+    path(
+        "<int:formulario_id>/secciones/reordenar/",
+        FormularioSeccionesReordenarAdminView.as_view(),
+        name="admin-formularios-secciones-reordenar",
+    ),
+    path(
+        "<int:formulario_id>/secciones/<str:codigo_seccion>/",
+        FormularioSeccionDetalleAdminView.as_view(),
+        name="admin-formularios-seccion-detalle",
+    ),
+    path(
+        "<int:formulario_id>/secciones/",
+        FormularioSeccionesAdminView.as_view(),
+        name="admin-formularios-secciones",
+    ),
+    path(
+        "<int:formulario_id>/preguntas/reordenar/",
+        FormularioPreguntasReordenarAdminView.as_view(),
+        name="admin-formularios-preguntas-reordenar",
+    ),
+    path(
+        "<int:formulario_id>/preguntas/<str:codigo_pregunta>/duplicar/",
+        FormularioPreguntaDuplicarAdminView.as_view(),
+        name="admin-formularios-pregunta-duplicar",
+    ),
+    path(
+        "<int:formulario_id>/preguntas/<str:codigo_pregunta>/opciones/reordenar/",
+        FormularioOpcionesReordenarAdminView.as_view(),
+        name="admin-formularios-opciones-reordenar",
+    ),
+    path(
+        "<int:formulario_id>/preguntas/<str:codigo_pregunta>/opciones/",
+        FormularioPreguntaOpcionesAdminView.as_view(),
+        name="admin-formularios-pregunta-opciones",
+    ),
+    path(
+        "<int:formulario_id>/preguntas/<str:codigo_pregunta>/",
+        FormularioPreguntaDetalleAdminView.as_view(),
+        name="admin-formularios-pregunta-detalle",
+    ),
+    path(
+        "<int:formulario_id>/preguntas/",
+        FormularioPreguntasAdminView.as_view(),
+        name="admin-formularios-preguntas",
+    ),
+    path(
+        "<int:formulario_id>/opciones/<str:codigo_opcion>/",
+        FormularioOpcionDetalleAdminView.as_view(),
+        name="admin-formularios-opcion-detalle",
+    ),
+    path(
+        "<int:formulario_id>/versiones/<int:version_id>/publicar/",
+        FormularioVersionPublicarView.as_view(),
+        name="admin-formularios-version-publicar",
+    ),
+    path(
+        "<int:formulario_id>/versiones/<int:version_id>/cerrar/",
+        FormularioVersionCerrarView.as_view(),
+        name="admin-formularios-version-cerrar",
+    ),
+    path(
+        "<int:formulario_id>/textos/",
+        FormularioTextosAdminView.as_view(),
+        name="admin-formularios-textos",
+    ),
+]
+
+urlpatterns_versiones = [
+    path(
+        "<int:version_id>/secciones/",
+        VersionSeccionesAdminView.as_view(),
+        name="admin-version-secciones",
+    ),
+]
+
+urlpatterns_secciones = [
+    path(
+        "<int:seccion_id>/",
+        SeccionAdminDetalleView.as_view(),
+        name="admin-seccion-detalle",
+    ),
+    path(
+        "<int:seccion_id>/preguntas/",
+        SeccionPreguntasAdminView.as_view(),
+        name="admin-seccion-preguntas",
+    ),
+]
+
+urlpatterns_preguntas = [
+    path(
+        "<int:pregunta_id>/",
+        PreguntaAdminDetalleView.as_view(),
+        name="admin-pregunta-detalle",
+    ),
+    path(
+        "<int:pregunta_id>/duplicar/",
+        PreguntaDuplicarView.as_view(),
+        name="admin-pregunta-duplicar",
+    ),
+    path(
+        "<int:pregunta_id>/opciones/",
+        PreguntaOpcionesAdminView.as_view(),
+        name="admin-pregunta-opciones",
+    ),
+    path(
+        "<int:pregunta_id>/reglas/",
+        PreguntaReglasAdminView.as_view(),
+        name="admin-pregunta-reglas",
+    ),
+    path(
+        "reordenar/",
+        PreguntasReordenarView.as_view(),
+        name="admin-preguntas-reordenar",
+    ),
+]
+
+urlpatterns_opciones = [
+    path(
+        "<int:opcion_id>/",
+        OpcionAdminDetalleView.as_view(),
+        name="admin-opcion-detalle",
+    ),
+]
+
+urlpatterns_textos = [
+    path(
+        "<int:texto_id>/",
+        TextoAdminDetalleView.as_view(),
+        name="admin-texto-detalle",
+    ),
+]
+
+urlpatterns_reglas = [
+    path(
+        "<int:regla_id>/",
+        ReglaAdminDetalleView.as_view(),
+        name="admin-regla-detalle",
+    ),
+]
