@@ -40,6 +40,7 @@ from aplicaciones.usuarios.serializers import (
     MisRespuestasSalidaSerializer,
     PerfilActualizacionSerializer,
     PerfilEditableSerializer,
+    RegistroCorreoEntradaSerializer,
     RegistroEntradaSerializer,
     RestaurarPasswordEntradaSerializer,
     SolicitarRestaurarPasswordEntradaSerializer,
@@ -59,7 +60,10 @@ from aplicaciones.usuarios.servicios.contacto import (
 )
 from aplicaciones.usuarios.servicios.perfil import actualizar_perfil_usuario
 from aplicaciones.usuarios.servicios.mis_respuestas import construir_historial_respuestas_usuario
-from aplicaciones.usuarios.servicios.registro import registrar_usuario
+from aplicaciones.usuarios.servicios.registro import (
+    registrar_usuario,
+    registrar_usuario_por_correo,
+)
 from aplicaciones.usuarios.servicios.restaurar_password import (
     restaurar_password,
     solicitar_restaurar_password,
@@ -273,6 +277,44 @@ class RegistroView(APIView):
         entrada.is_valid(raise_exception=True)
         try:
             registrar_usuario(entrada.validated_data)
+        except (
+            UsernameDuplicadoError,
+            EmailDuplicadoError,
+            ContrasenasNoCoincidenError,
+            ContrasenaInvalidaError,
+        ) as error:
+            return Response(
+                {"detalle": error.mensaje},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(
+            {"detalle": MensajesAuth.USUARIO_REGISTRADO},
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class RegistroCorreoView(APIView):
+    """Autorregistro de usuarios normales con correo y contrasena."""
+
+    permission_classes = [AllowAny]
+    authentication_classes = _AUTENTICACION_SESION
+
+    @extend_schema(
+        tags=["Auth"],
+        summary="Registrar usuario con correo",
+        request=RegistroCorreoEntradaSerializer,
+        responses={
+            status.HTTP_201_CREATED: DetalleSalidaSerializer,
+            status.HTTP_400_BAD_REQUEST: OpenApiResponse(response=_DETALLE_ERROR),
+        },
+    )
+    def post(self, solicitud: Request) -> Response:
+        """Crea un usuario activo con rol encuestado a partir del correo."""
+        entrada = RegistroCorreoEntradaSerializer(data=solicitud.data)
+        entrada.is_valid(raise_exception=True)
+        datos = entrada.validated_data
+        try:
+            registrar_usuario_por_correo(datos["correo"], datos["contrasena"])
         except (
             UsernameDuplicadoError,
             EmailDuplicadoError,

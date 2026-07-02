@@ -47,6 +47,13 @@ class RegistroEntradaSerializer(serializers.Serializer):
         return attrs
 
 
+class RegistroCorreoEntradaSerializer(serializers.Serializer):
+    """Entrada para autorregistro de usuarios normales con correo."""
+
+    correo = serializers.EmailField()
+    contrasena = serializers.CharField(max_length=128, write_only=True)
+
+
 class CambiarPasswordEntradaSerializer(serializers.Serializer):
     """Entrada para cambio de contrasena del usuario autenticado."""
 

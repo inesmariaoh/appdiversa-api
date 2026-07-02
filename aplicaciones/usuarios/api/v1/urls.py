@@ -22,6 +22,7 @@ from aplicaciones.usuarios.api.v1.views import (
     MeView,
     MisRespuestasView,
     PerfilView,
+    RegistroCorreoView,
     RegistroView,
     RestaurarPasswordView,
     SolicitarRestaurarPasswordView,
@@ -36,6 +37,7 @@ urlpatterns_auth = [
     path("mis-respuestas/", MisRespuestasView.as_view(), name="auth-mis-respuestas"),
     path("cambiar-password/", CambiarPasswordView.as_view(), name="auth-cambiar-password"),
     path("registro/", RegistroView.as_view(), name="auth-registro"),
+    path("registro/correo/", RegistroCorreoView.as_view(), name="auth-registro-correo"),
     path(
         "solicitar-restaurar-password/",
         SolicitarRestaurarPasswordView.as_view(),

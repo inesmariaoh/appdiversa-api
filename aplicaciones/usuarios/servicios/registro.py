@@ -2,6 +2,8 @@
 Servicios de registro de usuarios.
 """
 
+import re
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractBaseUser, Group
 from django.conf import settings
@@ -24,6 +26,9 @@ from aplicaciones.usuarios.servicios.autenticacion import validar_contrasena_dja
 User = get_user_model()
 
 CODIGO_PLANTILLA_CONFIRMACION = CodigoPlantillaCorreo.CONFIRMACION_REGISTRO
+LONGITUD_MAXIMA_USERNAME = 150
+USERNAME_POR_DEFECTO = "usuario"
+_PATRON_CARACTER_INVALIDO_USERNAME = re.compile(r"[^a-zA-Z0-9._-]")
 
 
 def _asignar_grupo_encuestado(usuario: AbstractBaseUser) -> None:
@@ -86,3 +91,34 @@ def registrar_usuario(datos: dict) -> AbstractBaseUser:
     )
     _enviar_correo_bienvenida(usuario)
     return usuario
+
+
+def _generar_username_unico(correo: str) -> str:
+    """Deriva un nombre de usuario unico a partir del correo electronico."""
+    parte_local = correo.split("@")[0]
+    base = _PATRON_CARACTER_INVALIDO_USERNAME.sub("", parte_local).lower()
+    base = base[:LONGITUD_MAXIMA_USERNAME] or USERNAME_POR_DEFECTO
+    candidato = base
+    sufijo = 1
+    while existe_username(candidato):
+        sufijo_texto = str(sufijo)
+        recorte = base[: LONGITUD_MAXIMA_USERNAME - len(sufijo_texto)]
+        candidato = f"{recorte}{sufijo_texto}"
+        sufijo += 1
+    return candidato
+
+
+def registrar_usuario_por_correo(correo: str, contrasena: str) -> AbstractBaseUser:
+    """Registra un usuario normal con rol encuestado a partir del correo."""
+    email = correo.strip()
+    if existe_email(email):
+        raise EmailDuplicadoError()
+    username = _generar_username_unico(email)
+    return registrar_usuario(
+        {
+            "username": username,
+            "email": email,
+            "password": contrasena,
+            "password_confirmacion": contrasena,
+        },
+    )
