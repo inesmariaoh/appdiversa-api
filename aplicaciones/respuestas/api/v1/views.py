@@ -20,7 +20,7 @@ from aplicaciones.respuestas.excepciones import (
     ValorInvalidoError,
     ValorNoPerteneceCatalogoError,
 )
-from aplicaciones.formularios.reglas.servicio import evaluar_reglas_para_respuesta
+from aplicaciones.formularios.reglas.servicio import evaluar_reglas_sesion
 from aplicaciones.respuestas.servicios import guardar_o_actualizar_respuesta
 from aplicaciones.sesiones_anonimas.permisos import PermisoSesionAnonimaValida
 
@@ -98,10 +98,7 @@ class GuardarRespuestaView(APIView):
             "origen_respuesta": resultado.respuesta.origen_respuesta,
             "requiere_sincronizacion": resultado.respuesta.requiere_sincronizacion,
             "esta_eliminado": resultado.respuesta.esta_eliminado,
-            "reglas": evaluar_reglas_para_respuesta(
-                datos["uuid_sesion"],
-                datos["codigo_pregunta"],
-            ),
+            "reglas": evaluar_reglas_sesion(datos["uuid_sesion"]),
         }
         serializador = GuardarRespuestaSalidaSerializer(salida)
         codigo_estado = (
