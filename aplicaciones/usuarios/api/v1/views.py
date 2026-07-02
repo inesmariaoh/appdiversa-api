@@ -2,7 +2,10 @@
 Vistas de autenticacion, perfil y contacto de usuarios.
 """
 
+from uuid import UUID
+
 from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiResponse
+from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import serializers, status
@@ -10,7 +13,10 @@ from aplicaciones.comun.autenticacion_sesion import AutenticacionSesionApi
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
+
+from aplicaciones.comun.throttling import ScopeThrottle
 
 from aplicaciones.usuarios.constantes import (
     MensajesAuth,
@@ -58,8 +64,17 @@ from aplicaciones.usuarios.servicios.contacto import (
     ContactoSinEmailSoporteError,
     enviar_contacto,
 )
+from aplicaciones.usuarios.servicios.exportar_respuestas_usuario import (
+    SesionNoPerteneceUsuarioError,
+    exportar_respuestas_sesion_usuario,
+)
 from aplicaciones.usuarios.servicios.perfil import actualizar_perfil_usuario
 from aplicaciones.usuarios.servicios.mis_respuestas import construir_historial_respuestas_usuario
+from aplicaciones.exportaciones.constantes import (
+    FORMATOS_DESCARGA_DIRECTA,
+    FormatoExportacion,
+    MensajesExportacionApi,
+)
 from aplicaciones.usuarios.servicios.registro import (
     registrar_usuario,
     registrar_usuario_por_correo,
@@ -97,6 +112,8 @@ class LoginView(APIView):
 
     permission_classes = [AllowAny]
     authentication_classes = _AUTENTICACION_SESION
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = ScopeThrottle.LOGIN
 
     @extend_schema(
         tags=["Auth"],
@@ -261,6 +278,8 @@ class RegistroView(APIView):
 
     permission_classes = [AllowAny]
     authentication_classes = _AUTENTICACION_SESION
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = ScopeThrottle.REGISTRO
 
     @extend_schema(
         tags=["Auth"],
@@ -298,6 +317,8 @@ class RegistroCorreoView(APIView):
 
     permission_classes = [AllowAny]
     authentication_classes = _AUTENTICACION_SESION
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = ScopeThrottle.REGISTRO
 
     @extend_schema(
         tags=["Auth"],
@@ -336,6 +357,8 @@ class SolicitarRestaurarPasswordView(APIView):
 
     permission_classes = [AllowAny]
     authentication_classes = _AUTENTICACION_SESION
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = ScopeThrottle.RESTAURAR_PASSWORD
 
     @extend_schema(
         tags=["Auth"],
@@ -356,6 +379,8 @@ class RestaurarPasswordView(APIView):
 
     permission_classes = [AllowAny]
     authentication_classes = _AUTENTICACION_SESION
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = ScopeThrottle.RESTAURAR_PASSWORD
 
     @extend_schema(
         tags=["Auth"],
@@ -394,6 +419,8 @@ class ContactoView(APIView):
     """Recibe mensajes del formulario de contacto publico."""
 
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = ScopeThrottle.CONTACTO
 
     @extend_schema(
         tags=["Contacto"],
@@ -436,3 +463,43 @@ class MisRespuestasView(APIView):
         """Retorna sesiones de formularios asociadas al usuario autenticado."""
         historial = construir_historial_respuestas_usuario(solicitud.user)
         return Response({"resultados": historial}, status=status.HTTP_200_OK)
+
+
+class MisRespuestasExportarView(APIView):
+    """Descarga las respuestas de una sesion propia del usuario autenticado."""
+
+    permission_classes = [PermisoUsuarioAutenticado401]
+    authentication_classes = _AUTENTICACION_SESION
+
+    @extend_schema(
+        tags=["Perfil"],
+        summary="Exportar respuestas de una sesion del usuario",
+        responses={
+            (status.HTTP_200_OK, "application/pdf"): bytes,
+            status.HTTP_400_BAD_REQUEST: OpenApiResponse(response=_DETALLE_ERROR),
+            status.HTTP_404_NOT_FOUND: OpenApiResponse(response=_DETALLE_ERROR),
+        },
+    )
+    def get(self, solicitud: Request, uuid_sesion: UUID) -> HttpResponse:
+        """Genera y descarga el archivo de respuestas de la sesion indicada."""
+        formato = solicitud.query_params.get("formato", FormatoExportacion.XLSX)
+        if formato not in FORMATOS_DESCARGA_DIRECTA:
+            return Response(
+                {"detalle": MensajesExportacionApi.FORMATO_NO_SOPORTADO},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            contenido, mime, extension = exportar_respuestas_sesion_usuario(
+                solicitud.user,
+                uuid_sesion,
+                formato,
+            )
+        except SesionNoPerteneceUsuarioError as error:
+            return Response(
+                {"detalle": error.mensaje},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        respuesta = HttpResponse(contenido, content_type=mime)
+        nombre_archivo = f"mis_respuestas_{uuid_sesion}.{extension}"
+        respuesta["Content-Disposition"] = f'attachment; filename="{nombre_archivo}"'
+        return respuesta

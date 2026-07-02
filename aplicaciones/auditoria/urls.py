@@ -2,6 +2,8 @@
 Rutas de la API de auditoria.
 """
 
-from django.urls import path
+from django.urls import include, path
 
-urlpatterns = []
+urlpatterns = [
+    path("", include("aplicaciones.auditoria.api.v1.urls")),
+]

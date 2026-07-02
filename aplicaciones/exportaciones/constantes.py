@@ -33,6 +33,14 @@ class EstadoExportacion(models.TextChoices):
     FALLIDA = "fallida", "Fallida"
 
 
+FORMATOS_DESCARGA_DIRECTA = (
+    FormatoExportacion.PDF,
+    FormatoExportacion.XLSX,
+    FormatoExportacion.CSV,
+    FormatoExportacion.JSON,
+)
+
+
 class MensajesExportacionApi:
     """Mensajes funcionales de la API de exportaciones."""
 

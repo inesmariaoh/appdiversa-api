@@ -64,6 +64,7 @@ MIME_AUDIO_MPEG = "audio/mpeg"
 MIME_VIDEO_MP4 = "video/mp4"
 MIME_APLICACION_PDF = "application/pdf"
 MIME_TEXTO_PLAIN = "text/plain"
+MIME_HOJA_CALCULO_ODS = "application/vnd.oasis.opendocument.spreadsheet"
 
 MIME_PERMITIDOS_POR_TIPO: dict[str, frozenset[str]] = {
     TipoArchivo.IMAGEN: frozenset(
@@ -81,6 +82,7 @@ MIME_PERMITIDOS_POR_TIPO: dict[str, frozenset[str]] = {
             "application/msword",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            MIME_HOJA_CALCULO_ODS,
             "text/csv",
             MIME_TEXTO_PLAIN,
             "application/json",

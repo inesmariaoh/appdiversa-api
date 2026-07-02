@@ -44,3 +44,22 @@ class AccionAuditoria(models.TextChoices):
     ACCESO_DENEGADO = "acceso_denegado", "Acceso denegado"
     CONFLICTO = "conflicto", "Conflicto"
     RESOLUCION_CONFLICTO = "resolucion_conflicto", "Resolución de conflicto"
+
+
+class MensajesAuditoriaApi:
+    """Mensajes de respuesta de la API de auditoria."""
+
+    SIN_PERMISO = "No tiene permisos para consultar los registros de auditoría."
+    REGISTRO_NO_ENCONTRADO = "El registro de auditoría solicitado no existe."
+
+
+class FiltrosAuditoria:
+    """Nombres de los parametros de filtrado de la API de auditoria."""
+
+    ENTIDAD = "entidad"
+    ENTIDAD_ID = "entidad_id"
+    ACCION = "accion"
+    USUARIO = "usuario"
+    FECHA_INICIO = "fecha_inicio"
+    FECHA_FIN = "fecha_fin"
+    BUSQUEDA = "busqueda"

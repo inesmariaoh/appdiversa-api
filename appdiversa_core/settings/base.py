@@ -189,6 +189,14 @@ else:
 CSRF_FAILURE_VIEW = "aplicaciones.comun.vistas_csrf.respuesta_csrf_fallida"
 CSRF_COOKIE_SAMESITE = env("CSRF_COOKIE_SAMESITE", default="Lax")
 
+PAGINACION_TAMANO_PAGINA = env.int("PAGINACION_TAMANO_PAGINA", default=25)
+PAGINACION_TAMANO_MAXIMO = env.int("PAGINACION_TAMANO_MAXIMO", default=200)
+
+THROTTLE_RATE_LOGIN = env("THROTTLE_RATE_LOGIN", default="10/min")
+THROTTLE_RATE_REGISTRO = env("THROTTLE_RATE_REGISTRO", default="5/min")
+THROTTLE_RATE_CONTACTO = env("THROTTLE_RATE_CONTACTO", default="5/min")
+THROTTLE_RATE_RESTAURAR_PASSWORD = env("THROTTLE_RATE_RESTAURAR_PASSWORD", default="5/min")
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [],
     "DEFAULT_PERMISSION_CLASSES": [
@@ -197,6 +205,15 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
+    "DEFAULT_PAGINATION_CLASS": "aplicaciones.comun.paginacion.PaginacionEstandar",
+    "PAGE_SIZE": PAGINACION_TAMANO_PAGINA,
+    "DEFAULT_THROTTLE_CLASSES": [],
+    "DEFAULT_THROTTLE_RATES": {
+        "login": THROTTLE_RATE_LOGIN,
+        "registro": THROTTLE_RATE_REGISTRO,
+        "contacto": THROTTLE_RATE_CONTACTO,
+        "restaurar_password": THROTTLE_RATE_RESTAURAR_PASSWORD,
+    },
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "aplicaciones.comun.excepciones_api.manejador_excepciones_api",
 }
