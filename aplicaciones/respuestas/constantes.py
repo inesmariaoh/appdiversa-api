@@ -20,3 +20,20 @@ class MensajesRespuestaApi:
         "No se cumplen las condiciones preliminares para diligenciar el formulario."
     )
     FORMULARIO_FINALIZADO_OK = "El formulario fue finalizado correctamente."
+
+
+class MotivoPreguntaPendiente:
+    """Motivos por los que una pregunta queda pendiente de diligenciamiento."""
+
+    OBLIGATORIA_SIN_RESPUESTA = "obligatoria_sin_respuesta"
+    TEXTO_OTRO_REQUERIDO = "texto_otro_requerido"
+
+
+MENSAJES_MOTIVO_PENDIENTE = {
+    MotivoPreguntaPendiente.OBLIGATORIA_SIN_RESPUESTA: (
+        "Falta responder esta pregunta obligatoria."
+    ),
+    MotivoPreguntaPendiente.TEXTO_OTRO_REQUERIDO: (
+        "Seleccionó la opción \"Otro, ¿cuál?\" y debe especificar el texto."
+    ),
+}

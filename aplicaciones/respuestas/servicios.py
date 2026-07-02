@@ -13,7 +13,11 @@ from aplicaciones.auditoria.constantes import AccionAuditoria
 from aplicaciones.auditoria.servicios import crear_snapshot_modelo, registrar_auditoria
 from aplicaciones.formularios.models import Pregunta
 from aplicaciones.respuestas.catalogo_validacion import validar_y_normalizar_valor_catalogo
-from aplicaciones.respuestas.constantes import MensajesRespuestaApi
+from aplicaciones.respuestas.constantes import (
+    MENSAJES_MOTIVO_PENDIENTE,
+    MensajesRespuestaApi,
+    MotivoPreguntaPendiente,
+)
 from aplicaciones.respuestas.excepciones import (
     FormularioYaFinalizadoError,
     OrigenRespuestaInvalidoError,
@@ -26,6 +30,7 @@ from aplicaciones.respuestas.models import OrigenRespuesta, Respuesta
 from aplicaciones.respuestas.selectores import (
     evaluar_filtros_sesion,
     obtener_pregunta_por_codigo_en_version,
+    obtener_preguntas_flujo_visual_sesion,
     obtener_preguntas_obligatorias_efectivas_sesion,
     obtener_respuesta,
     obtener_respuestas_por_pregunta_sesion,
@@ -40,6 +45,7 @@ from aplicaciones.respuestas.validadores_ubicacion_geografica import (
 )
 from aplicaciones.formularios.reglas.visibilidad import pregunta_visible_efectiva
 from aplicaciones.respuestas.formateo_valor_resumen import formatear_valor_resumen_legible
+from aplicaciones.respuestas.validacion_texto_otro import falta_texto_otro_obligatorio
 from aplicaciones.respuestas.validacion_util import (
     extraer_valor_resumen,
     validar_respuesta_util,
@@ -176,33 +182,97 @@ def obtener_respuestas_de_sesion(sesion: SesionAnonima) -> list[Respuesta]:
     return list(obtener_respuestas_sesion(sesion))
 
 
-def _construir_pregunta_pendiente(pregunta: Pregunta) -> dict[str, object]:
-    """Construye el detalle de una pregunta obligatoria pendiente."""
+def _construir_pregunta_pendiente(pregunta: Pregunta, motivo: str) -> dict[str, object]:
+    """Construye el detalle de una pregunta pendiente con su motivo especifico."""
     return {
         "codigo": pregunta.codigo,
         "texto": pregunta.texto,
         "seccion_codigo": pregunta.seccion.codigo,
         "seccion_titulo": pregunta.seccion.titulo,
         "orden": pregunta.orden,
+        "motivo": motivo,
+        "mensaje": MENSAJES_MOTIVO_PENDIENTE[motivo],
     }
 
 
+def _preguntas_pendientes_por_obligatoriedad(
+    preguntas_obligatorias: list[Pregunta],
+    respuestas_por_pregunta: dict[int, Respuesta],
+) -> list[tuple[Pregunta, str]]:
+    """Selecciona preguntas obligatorias sin respuesta util."""
+    pendientes: list[tuple[Pregunta, str]] = []
+    for pregunta in preguntas_obligatorias:
+        respuesta = respuestas_por_pregunta.get(pregunta.pk)
+        if respuesta is None or not validar_respuesta_util(pregunta, respuesta):
+            pendientes.append(
+                (pregunta, MotivoPreguntaPendiente.OBLIGATORIA_SIN_RESPUESTA),
+            )
+    return pendientes
+
+
+def _preguntas_pendientes_por_texto_otro(
+    sesion: SesionAnonima,
+    resultado_reglas: object,
+    respuestas_por_pregunta: dict[int, Respuesta],
+) -> list[tuple[Pregunta, str]]:
+    """Selecciona preguntas visibles con opcion otro seleccionada sin texto obligatorio."""
+    ids_visibles = [
+        pregunta.pk
+        for pregunta in obtener_preguntas_flujo_visual_sesion(sesion, resultado_reglas)
+    ]
+    preguntas_con_otro = (
+        Pregunta.objects.filter(
+            pk__in=ids_visibles,
+            permite_otro=True,
+            texto_otro_obligatorio=True,
+        )
+        .select_related("seccion")
+        .prefetch_related("opciones")
+    )
+
+    pendientes: list[tuple[Pregunta, str]] = []
+    for pregunta in preguntas_con_otro:
+        respuesta = respuestas_por_pregunta.get(pregunta.pk)
+        if respuesta is not None and falta_texto_otro_obligatorio(pregunta, respuesta):
+            pendientes.append(
+                (pregunta, MotivoPreguntaPendiente.TEXTO_OTRO_REQUERIDO),
+            )
+    return pendientes
+
+
+def _consolidar_preguntas_pendientes(
+    pendientes: list[tuple[Pregunta, str]],
+) -> list[dict[str, object]]:
+    """Construye el detalle de pendientes evitando duplicados por pregunta."""
+    identificadores_vistos: set[int] = set()
+    resultado: list[dict[str, object]] = []
+    for pregunta, motivo in pendientes:
+        if pregunta.pk in identificadores_vistos:
+            continue
+        identificadores_vistos.add(pregunta.pk)
+        resultado.append(_construir_pregunta_pendiente(pregunta, motivo))
+    return resultado
+
+
 def _evaluar_preguntas_pendientes(sesion: SesionAnonima) -> list[dict[str, object]]:
-    """Identifica preguntas obligatorias visibles sin respuesta util."""
+    """Identifica preguntas obligatorias o con texto otro obligatorio sin completar."""
     resultado_reglas = evaluar_resultado_reglas_sesion(sesion)
+    respuestas_por_pregunta = obtener_respuestas_por_pregunta_sesion(sesion)
     preguntas_obligatorias = obtener_preguntas_obligatorias_efectivas_sesion(
         sesion,
         resultado_reglas,
     )
-    respuestas_por_pregunta = obtener_respuestas_por_pregunta_sesion(sesion)
-    pendientes: list[dict[str, object]] = []
 
-    for pregunta in preguntas_obligatorias:
-        respuesta = respuestas_por_pregunta.get(pregunta.pk)
-        if respuesta is None or not validar_respuesta_util(pregunta, respuesta):
-            pendientes.append(_construir_pregunta_pendiente(pregunta))
-
-    return pendientes
+    pendientes = _preguntas_pendientes_por_obligatoriedad(
+        preguntas_obligatorias,
+        respuestas_por_pregunta,
+    )
+    pendientes += _preguntas_pendientes_por_texto_otro(
+        sesion,
+        resultado_reglas,
+        respuestas_por_pregunta,
+    )
+    return _consolidar_preguntas_pendientes(pendientes)
 
 
 def limpiar_respuestas_preguntas_ocultas(sesion: SesionAnonima) -> list[str]:

@@ -106,6 +106,7 @@ class PreguntaAdminSerializer(serializers.ModelSerializer):
             "bloquea_continuacion_si_no_cumple",
             "mensaje_no_cumple",
             "permite_otro",
+            "texto_otro_obligatorio",
             "permite_observacion",
             "orden",
             "longitud_minima",

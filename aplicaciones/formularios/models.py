@@ -369,6 +369,13 @@ class Pregunta(AuditoriaModeloAbstracto):
         help_text="Mensaje visible cuando la respuesta no cumple la condicion del filtro.",
     )
     permite_otro = models.BooleanField(default=False)
+    texto_otro_obligatorio = models.BooleanField(
+        default=False,
+        help_text=(
+            "Indica si el texto libre asociado a una opcion tipo otro es "
+            "obligatorio cuando dicha opcion resulta seleccionada."
+        ),
+    )
     permite_observacion = models.BooleanField(default=False)
     orden = models.PositiveIntegerField()
     longitud_minima = models.PositiveIntegerField(null=True, blank=True)

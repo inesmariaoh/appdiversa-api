@@ -292,6 +292,7 @@ class PreguntaSerializer(
             "mensaje_no_cumple",
             "validacion_filtro",
             "permite_otro",
+            "texto_otro_obligatorio",
             "permite_observacion",
             "orden",
             "longitud_minima",
@@ -452,6 +453,7 @@ class PreguntaSerializer(
         datos["comportamiento_interaccion"] = construir_comportamiento_interaccion(
             instancia.tipo_pregunta,
             instancia.permite_otro,
+            instancia.texto_otro_obligatorio,
             opciones,
         )
         datos["tooltip"] = tooltip_visible_en_api(

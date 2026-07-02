@@ -102,3 +102,15 @@ class MetadatosInteraccionSerializerTests(TestCase):
             comportamiento["modo_exclusion"],
             ModoExclusionOpciones.DESELECCIONAR_OTRAS,
         )
+
+    def test_pregunta_expone_campo_texto_otro_obligatorio(self) -> None:
+        """Historia de usuario asociada: texto obligatorio en opcion otro."""
+        self.pregunta.texto_otro_obligatorio = True
+        self.pregunta.save(update_fields=["texto_otro_obligatorio"])
+
+        datos = PreguntaSerializer(self.pregunta).data
+
+        self.assertEqual(
+            datos["comportamiento_interaccion"]["campo_texto_otro"],
+            ModoCampoTextoOtro.OBLIGATORIO,
+        )

@@ -14,6 +14,7 @@ class ModoCampoTextoOtro:
     """Modo del campo de texto libre asociado a opciones otro/cual."""
 
     OPCIONAL = "opcional"
+    OBLIGATORIO = "obligatorio"
     NINGUNO = "ninguno"
 
 

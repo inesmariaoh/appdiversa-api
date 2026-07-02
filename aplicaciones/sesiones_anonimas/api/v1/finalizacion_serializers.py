@@ -13,6 +13,8 @@ class PreguntaPendienteSerializer(serializers.Serializer):
     seccion_codigo = serializers.CharField()
     seccion_titulo = serializers.CharField()
     orden = serializers.IntegerField()
+    motivo = serializers.CharField(required=False)
+    mensaje = serializers.CharField(required=False)
 
 
 class ValidacionFinalizacionSerializer(serializers.Serializer):

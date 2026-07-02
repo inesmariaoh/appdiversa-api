@@ -280,6 +280,7 @@ class PreguntaAdmin(ModeloAuditableAdmin):
                     "bloquea_continuacion_si_no_cumple",
                     "mensaje_no_cumple",
                     "permite_otro",
+                    "texto_otro_obligatorio",
                     "permite_observacion",
                     "longitud_minima",
                     "longitud_maxima",

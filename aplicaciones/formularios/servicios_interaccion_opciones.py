@@ -52,22 +52,30 @@ def _resolver_tipo_seleccion(tipo_pregunta: str) -> str:
 
 def _resolver_modo_campo_texto_otro(
     permite_otro: bool,
+    texto_otro_obligatorio: bool,
     opciones: list[dict[str, Any]],
 ) -> str:
-    if permite_otro and any(opcion.get("activa_otro") for opcion in opciones):
-        return ModoCampoTextoOtro.OPCIONAL
-    return ModoCampoTextoOtro.NINGUNO
+    if not (permite_otro and any(opcion.get("activa_otro") for opcion in opciones)):
+        return ModoCampoTextoOtro.NINGUNO
+    if texto_otro_obligatorio:
+        return ModoCampoTextoOtro.OBLIGATORIO
+    return ModoCampoTextoOtro.OPCIONAL
 
 
 def construir_comportamiento_interaccion(
     tipo_pregunta: str,
     permite_otro: bool,
+    texto_otro_obligatorio: bool,
     opciones: list[dict[str, Any]],
 ) -> dict[str, str]:
     """Construye las instrucciones de interaccion para una pregunta."""
     comportamiento: dict[str, str] = {
         "tipo_seleccion": _resolver_tipo_seleccion(tipo_pregunta),
-        "campo_texto_otro": _resolver_modo_campo_texto_otro(permite_otro, opciones),
+        "campo_texto_otro": _resolver_modo_campo_texto_otro(
+            permite_otro,
+            texto_otro_obligatorio,
+            opciones,
+        ),
     }
     if (
         tipo_pregunta in TIPOS_SELECCION_MULTIPLE
