@@ -36,3 +36,9 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 X_FRAME_OPTIONS = "DENY"
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+
+# El frontend (Vercel) y la API (Render) viven en dominios distintos, por lo que
+# la cookie de sesion es de tipo cross-site. Para que el navegador la envie en las
+# peticiones del SPA debe viajar con SameSite=None y Secure activado.
+SESSION_COOKIE_SAMESITE = env("SESSION_COOKIE_SAMESITE", default="None")  # noqa: F405
+CSRF_COOKIE_SAMESITE = env("CSRF_COOKIE_SAMESITE", default="None")  # noqa: F405
