@@ -9,11 +9,15 @@ from pathlib import Path
 import environ
 from corsheaders.defaults import default_headers
 
+from appdiversa_core.settings.opciones_base_datos import construir_opciones_mysql
+
 env = environ.Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1", "0.0.0.0"]),
     CORS_ALLOWED_ORIGINS=(list, []),
     DB_PORT=(str, "3306"),
+    DB_SSL_MODE=(str, ""),
+    DB_SSL_CA=(str, ""),
     API_INTERNA_TOKEN=(str, ""),
     EMAIL_PORT=(int, 587),
     EMAIL_USE_TLS=(bool, True),
@@ -97,9 +101,7 @@ DATABASES = {
         "PASSWORD": env("DB_PASSWORD"),
         "HOST": env("DB_HOST"),
         "PORT": env("DB_PORT"),
-        "OPTIONS": {
-            "charset": "utf8mb4",
-        },
+        "OPTIONS": construir_opciones_mysql(env),
         "TEST": {
             "CHARSET": "utf8mb4",
         },
