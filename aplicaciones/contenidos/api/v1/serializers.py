@@ -174,6 +174,7 @@ class ConfiguracionInterfazPublicaSerializer(serializers.Serializer):
         datos["flujo_formulario"] = construir_bloque_flujo_formulario_publico(
             interfaz=instancia,
             mapa_traducciones=mapa_traducciones,
+            solicitud=solicitud,
         )
         return datos
 

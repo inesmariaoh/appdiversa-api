@@ -263,7 +263,7 @@ class ConfiguracionFlujoFormularioAdmin(ModeloAuditableAdmin):
     )
     list_filter = ("esta_activa", "esta_eliminado")
     search_fields = ("uuid", "modal_salir_titulo", "terminos_titulo")
-    autocomplete_fields = ("configuracion_interfaz",)
+    autocomplete_fields = ("configuracion_interfaz", "img_enc_enviada_exito")
     readonly_fields = ("uuid",)
     fieldsets = (
         (
@@ -309,6 +309,19 @@ class ConfiguracionFlujoFormularioAdmin(ModeloAuditableAdmin):
                     "modal_guardado_parrafo",
                     "modal_guardado_btn_seguir",
                     "modal_guardado_btn_otras",
+                ),
+            },
+        ),
+        (
+            "Pantalla de envío exitoso",
+            {
+                "description": (
+                    "Imagen y texto alternativo de la pantalla de confirmación "
+                    "de envío. Si no se define imagen, no se muestra ninguna."
+                ),
+                "fields": (
+                    "img_enc_enviada_exito",
+                    "img_enc_enviada_exito_alt",
                 ),
             },
         ),

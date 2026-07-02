@@ -7,6 +7,12 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from aplicaciones.archivos.constantes import (
+    EstadoArchivo,
+    OrigenArchivo,
+    TipoArchivo,
+)
+from aplicaciones.archivos.models import ArchivoRepositorio
 from aplicaciones.contenidos.constantes import ValoresPorDefectoFlujoFormulario
 from aplicaciones.contenidos.models import ConfiguracionFlujoFormulario, ConfiguracionInterfaz
 from aplicaciones.contenidos.servicios_flujo_formulario import (
@@ -16,6 +22,25 @@ from aplicaciones.contenidos.servicios_flujo_formulario import (
 from aplicaciones.internacionalizacion.models import Idioma, TraduccionContenido
 
 URL_CONFIGURACION = "/api/v1/interfaz/configuracion/"
+URL_IMAGEN_EXITO = "https://res.cloudinary.com/demo/image/upload/exito.png"
+
+
+def crear_archivo_imagen_exito() -> ArchivoRepositorio:
+    """Crea un archivo de repositorio publico apto para la pantalla de exito."""
+    return ArchivoRepositorio.objects.create(
+        nombre_original="img_enc_enviada_exito.png",
+        nombre_fisico="exito.png",
+        extension="png",
+        mime_type="image/png",
+        tamano_bytes=0,
+        checksum_sha256="",
+        tipo_archivo=TipoArchivo.IMAGEN,
+        ruta_relativa="externo/cloudinary/img_enc_enviada_exito.png",
+        url_publica=URL_IMAGEN_EXITO,
+        es_publico=True,
+        origen=OrigenArchivo.CONFIGURACION,
+        estado=EstadoArchivo.ACTIVO,
+    )
 
 
 class ConfiguracionFlujoFormularioModelTests(TestCase):
@@ -105,6 +130,30 @@ class ConfiguracionFlujoFormularioServicioTests(TestCase):
         self.assertEqual(bloque["terminos"]["boton_cerrar"], "Salir")
         self.assertEqual(bloque["terminos"]["enlace_terminos"], "Ver terminos")
 
+    def test_envio_exitoso_sin_imagen_usa_alt_por_defecto(self) -> None:
+        flujo_sin_imagen = ConfiguracionFlujoFormulario(esta_activa=False)
+        bloque = construir_bloque_flujo_formulario_publico(flujo=flujo_sin_imagen)
+        self.assertIn("envio_exitoso", bloque)
+        self.assertIsNone(bloque["envio_exitoso"]["imagen_url"])
+        self.assertEqual(
+            bloque["envio_exitoso"]["imagen_alt"],
+            ValoresPorDefectoFlujoFormulario.ENVIO_EXITO_IMAGEN_ALT,
+        )
+
+    def test_envio_exitoso_con_imagen_y_alt_personalizado(self) -> None:
+        archivo = crear_archivo_imagen_exito()
+        ConfiguracionFlujoFormulario.objects.create(
+            esta_activa=True,
+            img_enc_enviada_exito=archivo,
+            img_enc_enviada_exito_alt="Gracias por responder",
+        )
+        bloque = construir_bloque_flujo_formulario_publico()
+        self.assertEqual(bloque["envio_exitoso"]["imagen_url"], URL_IMAGEN_EXITO)
+        self.assertEqual(
+            bloque["envio_exitoso"]["imagen_alt"],
+            "Gracias por responder",
+        )
+
     def test_email_soporte_usa_configuracion_interfaz(self) -> None:
         interfaz = ConfiguracionInterfaz.objects.create(
             nombre_aplicativo="App",
@@ -134,6 +183,23 @@ class ConfiguracionFlujoFormularioApiTests(TestCase):
         self.assertIn("modal_sesion", datos["flujo_formulario"])
         self.assertIn("modal_guardado", datos["flujo_formulario"])
         self.assertIn("terminos", datos["flujo_formulario"])
+        self.assertIn("envio_exitoso", datos["flujo_formulario"])
+
+    def test_endpoint_expone_imagen_envio_exitoso_absoluta(self) -> None:
+        archivo = crear_archivo_imagen_exito()
+        ConfiguracionFlujoFormulario.objects.create(
+            esta_activa=True,
+            img_enc_enviada_exito=archivo,
+        )
+        ConfiguracionInterfaz.objects.create(
+            nombre_aplicativo="App",
+            esta_activa=True,
+        )
+        respuesta = self.cliente.get(URL_CONFIGURACION)
+        self.assertEqual(
+            respuesta.json()["flujo_formulario"]["envio_exitoso"]["imagen_url"],
+            URL_IMAGEN_EXITO,
+        )
 
     def test_endpoint_con_configuracion_activa_y_flujo(self) -> None:
         interfaz = ConfiguracionInterfaz.objects.create(

@@ -17,12 +17,18 @@ from aplicaciones.archivos.constantes import (
 )
 from aplicaciones.archivos.models import ArchivoRepositorio
 from aplicaciones.contenidos.constantes import CodigosLogoInterfaz
-from aplicaciones.contenidos.models import ConfiguracionInterfaz, LogoInterfaz
+from aplicaciones.contenidos.models import (
+    ConfiguracionFlujoFormulario,
+    ConfiguracionInterfaz,
+    LogoInterfaz,
+)
 from aplicaciones.formularios.models import Formulario
 
 METADATO_CODIGO_RECURSO = "codigo_recurso"
 METADATO_PROVEEDOR = "proveedor"
 PROVEEDOR_CLOUDINARY = "cloudinary"
+MIME_TYPE_PNG = "image/png"
+MIME_TYPE_JPEG = "image/jpeg"
 PATRONES_PORTADA_FORMULARIO = {
     "image_ecu_disponible": "image_ecu_disponible",
     "image_proxma_enc": "image_proxma_enc",
@@ -47,7 +53,7 @@ RECURSOS_IMAGENES_CLOUDINARY: dict[str, RecursoImagenExterna] = {
         ),
         nombre_original="image_ecu_disponible.png",
         extension="png",
-        mime_type="image/png",
+        mime_type=MIME_TYPE_PNG,
     ),
     "image_proxma_enc": RecursoImagenExterna(
         url=(
@@ -56,7 +62,7 @@ RECURSOS_IMAGENES_CLOUDINARY: dict[str, RecursoImagenExterna] = {
         ),
         nombre_original="image_proxma_enc.png",
         extension="png",
-        mime_type="image/png",
+        mime_type=MIME_TYPE_PNG,
     ),
     "logos_dane_sen": RecursoImagenExterna(
         url=(
@@ -65,7 +71,7 @@ RECURSOS_IMAGENES_CLOUDINARY: dict[str, RecursoImagenExterna] = {
         ),
         nombre_original="logos_dane_sen.png",
         extension="png",
-        mime_type="image/png",
+        mime_type=MIME_TYPE_PNG,
     ),
     "logo_propuesta_2": RecursoImagenExterna(
         url=(
@@ -74,9 +80,20 @@ RECURSOS_IMAGENES_CLOUDINARY: dict[str, RecursoImagenExterna] = {
         ),
         nombre_original="Propuesta_2.jpg",
         extension="jpg",
-        mime_type="image/jpeg",
+        mime_type=MIME_TYPE_JPEG,
+    ),
+    "img_enc_enviada_exito": RecursoImagenExterna(
+        url=(
+            "https://res.cloudinary.com/t46o5s2e/image/upload/"
+            "v1782996750/img_enc_enviada_exito_uhvxn1.png"
+        ),
+        nombre_original="img_enc_enviada_exito.png",
+        extension="png",
+        mime_type=MIME_TYPE_PNG,
     ),
 }
+
+RECURSO_IMAGEN_ENVIO_EXITO = "img_enc_enviada_exito"
 
 MAPEO_LOGO_RECURSO = {
     CodigosLogoInterfaz.INSTITUCIONAL: "logos_dane_sen",
@@ -138,6 +155,19 @@ def _vincular_logos_interfaz(archivos: dict[str, ArchivoRepositorio]) -> None:
             esta_eliminado=False,
         )
         logos.update(archivo_repositorio=archivo)
+
+
+def vincular_imagen_envio_exito_flujo() -> None:
+    """Vincula la imagen de envio exitoso a las configuraciones de flujo activas."""
+    archivo = ArchivoRepositorio.objects.filter(
+        metadatos__codigo_recurso=RECURSO_IMAGEN_ENVIO_EXITO,
+        esta_eliminado=False,
+    ).first()
+    if archivo is None:
+        return
+    ConfiguracionFlujoFormulario.objects.filter(esta_eliminado=False).update(
+        img_enc_enviada_exito=archivo,
+    )
 
 
 def _vincular_configuracion_interfaz(archivos: dict[str, ArchivoRepositorio]) -> None:

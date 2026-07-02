@@ -152,6 +152,14 @@ class ConfiguracionFlujoFormulario(AuditoriaModeloAbstracto):
     terminos_enlace = models.CharField(max_length=255, blank=True)
     terminos_enlace_ley = models.CharField(max_length=255, blank=True)
     terminos_enlace_politica_datos = models.CharField(max_length=255, blank=True)
+    img_enc_enviada_exito = models.ForeignKey(
+        REFERENCIA_MODELO_ARCHIVO_REPOSITORIO,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="configuraciones_flujo_envio_exito",
+    )
+    img_enc_enviada_exito_alt = models.CharField(max_length=500, blank=True)
     esta_activa = models.BooleanField(default=True)
 
     class Meta:

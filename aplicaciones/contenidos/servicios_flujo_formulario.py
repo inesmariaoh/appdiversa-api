@@ -2,6 +2,7 @@
 Servicios de parametrizacion de textos del flujo de formularios.
 """
 
+from typing import Any
 from uuid import UUID
 
 from django.db import transaction
@@ -250,6 +251,38 @@ def _construir_terminos(
     }
 
 
+def _resolver_url_imagen_exito(
+    flujo: ConfiguracionFlujoFormulario | None,
+    solicitud: Any,
+) -> str | None:
+    """Resuelve la URL publica de la imagen de la pantalla de envio exitoso."""
+    if flujo is None or flujo.img_enc_enviada_exito_id is None:
+        return None
+    from aplicaciones.archivos.servicios import construir_url
+
+    return construir_url(flujo.img_enc_enviada_exito, solicitud)
+
+
+def _construir_envio_exitoso(
+    flujo: ConfiguracionFlujoFormulario | None,
+    solicitud: Any,
+    mapa_traducciones: dict,
+    uuid_entidad: UUID | None,
+) -> dict[str, str | None]:
+    """Construye el bloque publico de la pantalla de envio exitoso."""
+    defecto = ValoresPorDefectoFlujoFormulario
+    return {
+        "imagen_url": _resolver_url_imagen_exito(flujo, solicitud),
+        "imagen_alt": _valor_campo_traducido(
+            flujo,
+            "img_enc_enviada_exito_alt",
+            defecto.ENVIO_EXITO_IMAGEN_ALT,
+            mapa_traducciones,
+            uuid_entidad,
+        ),
+    }
+
+
 def construir_flujo_formulario_por_defecto(
     interfaz: ConfiguracionInterfaz | None = None,
 ) -> dict[str, dict]:
@@ -267,6 +300,7 @@ def construir_bloque_flujo_formulario_publico(
     interfaz: ConfiguracionInterfaz | None = None,
     mapa_traducciones: dict | None = None,
     uuid_entidad: UUID | None = None,
+    solicitud: Any = None,
 ) -> dict[str, dict]:
     """Construye el bloque flujo_formulario expuesto al frontend."""
     if flujo is None:
@@ -278,4 +312,7 @@ def construir_bloque_flujo_formulario_publico(
         "modal_sesion": _construir_modal_sesion(flujo, traducciones, uuid_flujo),
         "modal_guardado": _construir_modal_guardado(flujo, traducciones, uuid_flujo),
         "terminos": _construir_terminos(flujo, interfaz, traducciones, uuid_flujo),
+        "envio_exitoso": _construir_envio_exitoso(
+            flujo, solicitud, traducciones, uuid_flujo,
+        ),
     }

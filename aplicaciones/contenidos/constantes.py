@@ -93,6 +93,8 @@ class ValoresPorDefectoFlujoFormulario:
         "Política de Protección de Datos Personales"
     )
 
+    ENVIO_EXITO_IMAGEN_ALT = "Encuesta enviada con éxito"
+
 
 class CodigosLogoInterfaz:
     """Identificadores tecnicos reutilizables para logos de interfaz."""
