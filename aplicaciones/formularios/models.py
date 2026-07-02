@@ -88,6 +88,7 @@ class TipoTextoFormulario(models.TextChoices):
     ENVIO_CORREO = "envio_correo", "Envío de correo"
     CONTACTO = "contacto", "Contacto"
     AYUDA_ACCESIBILIDAD = "ayuda_accesibilidad", "Ayuda de accesibilidad"
+    NO_CUMPLE_CONDICIONES = "no_cumple_condiciones", "No cumple condiciones"
 
 
 class TipoPregunta(models.TextChoices):
