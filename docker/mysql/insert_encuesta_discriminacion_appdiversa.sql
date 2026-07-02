@@ -535,6 +535,17 @@ WHERE @preg_p7 IS NOT NULL AND @preg_p7_ant IS NOT NULL
       AND accion = 'hacer_obligatoria'
       AND esta_eliminado = 0
   );
+-- Oculta el periodo de discriminacion (P13) cuando P12 marca la opcion excluyente 'No he sentido discriminación'.
+INSERT INTO `formularios_reglapregunta` (`operador`, `valor_esperado`, `accion`, `mensaje`, `esta_activa`, `pregunta_destino_id`, `pregunta_origen_id`, `seccion_destino_id`, `fecha_creacion`, `fecha_modificacion`, `fecha_eliminacion`, `creado_por_id`, `modificado_por_id`, `eliminado_por_id`, `esta_eliminado`)
+SELECT 'contains', JSON_OBJECT('valores', JSON_ARRAY('OP26-P12', 'no_he_sentido')), 'ocultar', '', 1, @preg_p13, @preg_p12, NULL, @now, @now, NULL, NULL, NULL, NULL, 0
+WHERE @preg_p12 IS NOT NULL AND @preg_p13 IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM `formularios_reglapregunta`
+    WHERE pregunta_origen_id = @preg_p12
+      AND pregunta_destino_id = @preg_p13
+      AND accion = 'ocultar'
+      AND esta_eliminado = 0
+  );
 
 -- Reglas funcionales adicionales sugeridas
 -- - Si P12 incluye 'No he sentido discriminación', debe tratarse como opción excluyente.
