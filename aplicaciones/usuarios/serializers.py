@@ -150,6 +150,12 @@ class ReenviarVerificacionEntradaSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
 
+class EliminarCuentaEntradaSerializer(serializers.Serializer):
+    """Entrada para confirmar la eliminacion de la cuenta propia."""
+
+    password = serializers.CharField(max_length=128, write_only=True)
+
+
 class DetalleSalidaSerializer(serializers.Serializer):
     """Respuesta con mensaje funcional en campo detalle."""
 

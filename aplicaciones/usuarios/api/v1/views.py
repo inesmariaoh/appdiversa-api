@@ -43,6 +43,7 @@ from aplicaciones.usuarios.serializers import (
     CambiarPasswordEntradaSerializer,
     ContactoEntradaSerializer,
     DetalleSalidaSerializer,
+    EliminarCuentaEntradaSerializer,
     LoginEntradaSerializer,
     LoginSalidaSerializer,
     MisRespuestasSalidaSerializer,
@@ -72,6 +73,7 @@ from aplicaciones.usuarios.servicios.exportar_respuestas_usuario import (
     SesionNoPerteneceUsuarioError,
     exportar_respuestas_sesion_usuario,
 )
+from aplicaciones.usuarios.servicios.eliminar_cuenta import eliminar_cuenta_usuario
 from aplicaciones.usuarios.servicios.perfil import actualizar_perfil_usuario
 from aplicaciones.usuarios.servicios.mis_respuestas import construir_historial_respuestas_usuario
 from aplicaciones.exportaciones.constantes import (
@@ -279,6 +281,40 @@ class CambiarPasswordView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return Response({"detalle": MensajesAuth.CONTRASENA_CAMBIADA})
+
+
+class EliminarCuentaView(APIView):
+    """Elimina (baja logica) la cuenta del usuario autenticado."""
+
+    permission_classes = [PermisoUsuarioAutenticado]
+    authentication_classes = _AUTENTICACION_SESION
+
+    @extend_schema(
+        tags=["Perfil"],
+        summary="Eliminar cuenta propia",
+        request=EliminarCuentaEntradaSerializer,
+        responses={
+            status.HTTP_200_OK: DetalleSalidaSerializer,
+            status.HTTP_400_BAD_REQUEST: OpenApiResponse(response=_DETALLE_ERROR),
+            status.HTTP_401_UNAUTHORIZED: OpenApiResponse(response=_DETALLE_ERROR),
+        },
+    )
+    def post(self, solicitud: Request) -> Response:
+        """Valida la contrasena, desactiva la cuenta y cierra la sesion."""
+        entrada = EliminarCuentaEntradaSerializer(data=solicitud.data)
+        entrada.is_valid(raise_exception=True)
+        try:
+            eliminar_cuenta_usuario(
+                solicitud,
+                solicitud.user,
+                entrada.validated_data["password"],
+            )
+        except ContrasenaActualIncorrectaError as error:
+            return Response(
+                {"detalle": error.mensaje},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response({"detalle": MensajesAuth.CUENTA_ELIMINADA})
 
 
 class RegistroView(APIView):

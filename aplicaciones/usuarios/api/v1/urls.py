@@ -17,6 +17,7 @@ from aplicaciones.usuarios.api.v1.views import (
     CambiarPasswordView,
     ContactoView,
     CsrfCookieView,
+    EliminarCuentaView,
     LoginView,
     LogoutView,
     MeView,
@@ -44,6 +45,7 @@ urlpatterns_auth = [
         name="auth-mis-respuestas-exportar",
     ),
     path("cambiar-password/", CambiarPasswordView.as_view(), name="auth-cambiar-password"),
+    path("eliminar-cuenta/", EliminarCuentaView.as_view(), name="auth-eliminar-cuenta"),
     path("registro/", RegistroView.as_view(), name="auth-registro"),
     path("registro/correo/", RegistroCorreoView.as_view(), name="auth-registro-correo"),
     path(

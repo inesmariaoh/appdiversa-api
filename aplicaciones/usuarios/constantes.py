@@ -107,6 +107,7 @@ class MensajesAuth:
     )
     CONTRASENA_RESTAURADA = "La contraseña fue restaurada correctamente."
     TOKEN_RESTAURAR_INVALIDO = "El enlace de restauración no es válido o ha expirado."
+    CUENTA_ELIMINADA = "Tu cuenta fue eliminada correctamente."
 
 
 class MensajesVerificacionCorreo:
