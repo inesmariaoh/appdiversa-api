@@ -9,4 +9,5 @@ urlpatterns = [
     path("", include("aplicaciones.formularios.urls_admin")),
     path("", include("aplicaciones.exportaciones.urls_admin")),
     path("", include("aplicaciones.sincronizacion.urls_admin")),
+    path("", include("aplicaciones.catalogos.urls_admin")),
 ]

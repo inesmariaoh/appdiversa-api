@@ -6,7 +6,10 @@ from typing import Any
 
 from django.db import transaction
 
-from aplicaciones.contenidos.constantes import ValoresPorDefectoInterfaz
+from aplicaciones.contenidos.constantes import (
+    ValoresPorDefectoAccesibilidad,
+    ValoresPorDefectoInterfaz,
+)
 from aplicaciones.contenidos.models import ConfiguracionInterfaz, LogoInterfaz
 from aplicaciones.comun.utilidades_media import construir_url_absoluta_desde_solicitud
 from aplicaciones.contenidos.selectores import (
@@ -32,7 +35,38 @@ def activar_configuracion_interfaz(
     return configuracion
 
 
-def construir_configuracion_por_defecto() -> dict[str, str | bool | None | list]:
+def construir_bloque_accesibilidad(
+    configuracion: ConfiguracionInterfaz | None = None,
+) -> dict[str, str | bool]:
+    """Construye el bloque de banderas de accesibilidad expuesto al frontend."""
+    if configuracion is None:
+        return {
+            "lectura_voz_habilitada": (
+                ValoresPorDefectoAccesibilidad.LECTURA_VOZ_HABILITADA
+            ),
+            "comandos_voz_habilitada": (
+                ValoresPorDefectoAccesibilidad.COMANDOS_VOZ_HABILITADA
+            ),
+            "lengua_senas_habilitada": (
+                ValoresPorDefectoAccesibilidad.LENGUA_SENAS_HABILITADA
+            ),
+            "fuente_dislexia_habilitada": (
+                ValoresPorDefectoAccesibilidad.FUENTE_DISLEXIA_HABILITADA
+            ),
+            "tema_por_defecto": ValoresPorDefectoAccesibilidad.TEMA_POR_DEFECTO,
+        }
+    return {
+        "lectura_voz_habilitada": configuracion.accesibilidad_lectura_voz_habilitada,
+        "comandos_voz_habilitada": configuracion.accesibilidad_comandos_voz_habilitada,
+        "lengua_senas_habilitada": configuracion.accion_lengua_senas_habilitada,
+        "fuente_dislexia_habilitada": (
+            configuracion.accesibilidad_fuente_dislexia_habilitada
+        ),
+        "tema_por_defecto": configuracion.accesibilidad_tema_por_defecto,
+    }
+
+
+def construir_configuracion_por_defecto() -> dict[str, str | bool | None | list | dict]:
     """Construye los valores por defecto de la configuracion de interfaz."""
     return {
         "nombre_aplicativo": ValoresPorDefectoInterfaz.NOMBRE_APLICATIVO,
@@ -77,6 +111,7 @@ def construir_configuracion_por_defecto() -> dict[str, str | bool | None | list]
         "color_primario": ValoresPorDefectoInterfaz.COLOR_PRIMARIO,
         "color_secundario": ValoresPorDefectoInterfaz.COLOR_SECUNDARIO,
         "color_acento": ValoresPorDefectoInterfaz.COLOR_ACENTO,
+        "accesibilidad": construir_bloque_accesibilidad(),
         "flujo_formulario": construir_flujo_formulario_por_defecto(),
     }
 
