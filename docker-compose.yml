@@ -9,6 +9,35 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+
+  redis:
+    image: redis:7-alpine
+    container_name: appdiversa_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  celery_worker:
+    build: .
+    container_name: appdiversa_celery
+    command: celery -A appdiversa_core worker --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     env_file:
       - .env
 
@@ -34,3 +63,4 @@ services:
 
 volumes:
   mysql_data:
+  redis_data:

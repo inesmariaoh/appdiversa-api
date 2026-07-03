@@ -142,6 +142,16 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# Almacenamiento de archivos: local (disco) o s3 (Amazon S3 o compatible).
+STORAGE_BACKEND = env("STORAGE_BACKEND", default="local")
+AWS_S3_BUCKET = env("AWS_S3_BUCKET", default="")
+AWS_S3_REGION = env("AWS_S3_REGION", default="")
+AWS_S3_ACCESS_KEY_ID = env("AWS_S3_ACCESS_KEY_ID", default="")
+AWS_S3_SECRET_ACCESS_KEY = env("AWS_S3_SECRET_ACCESS_KEY", default="")
+AWS_S3_ENDPOINT_URL = env("AWS_S3_ENDPOINT_URL", default="")
+AWS_S3_PUBLIC_BASE_URL = env("AWS_S3_PUBLIC_BASE_URL", default="")
+AWS_S3_PREFIJO = env("AWS_S3_PREFIJO", default="")
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
@@ -189,6 +199,14 @@ else:
 CSRF_FAILURE_VIEW = "aplicaciones.comun.vistas_csrf.respuesta_csrf_fallida"
 CSRF_COOKIE_SAMESITE = env("CSRF_COOKIE_SAMESITE", default="Lax")
 
+PAGINACION_TAMANO_PAGINA = env.int("PAGINACION_TAMANO_PAGINA", default=25)
+PAGINACION_TAMANO_MAXIMO = env.int("PAGINACION_TAMANO_MAXIMO", default=200)
+
+THROTTLE_RATE_LOGIN = env("THROTTLE_RATE_LOGIN", default="10/min")
+THROTTLE_RATE_REGISTRO = env("THROTTLE_RATE_REGISTRO", default="5/min")
+THROTTLE_RATE_CONTACTO = env("THROTTLE_RATE_CONTACTO", default="5/min")
+THROTTLE_RATE_RESTAURAR_PASSWORD = env("THROTTLE_RATE_RESTAURAR_PASSWORD", default="5/min")
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [],
     "DEFAULT_PERMISSION_CLASSES": [
@@ -197,6 +215,15 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
+    "DEFAULT_PAGINATION_CLASS": "aplicaciones.comun.paginacion.PaginacionEstandar",
+    "PAGE_SIZE": PAGINACION_TAMANO_PAGINA,
+    "DEFAULT_THROTTLE_CLASSES": [],
+    "DEFAULT_THROTTLE_RATES": {
+        "login": THROTTLE_RATE_LOGIN,
+        "registro": THROTTLE_RATE_REGISTRO,
+        "contacto": THROTTLE_RATE_CONTACTO,
+        "restaurar_password": THROTTLE_RATE_RESTAURAR_PASSWORD,
+    },
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "aplicaciones.comun.excepciones_api.manejador_excepciones_api",
 }
@@ -207,3 +234,14 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "v1",
     "SERVE_INCLUDE_SCHEMA": False,
 }
+
+# Cola de tareas asincronas (Celery + Redis).
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://localhost:6379/1")
+CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=False)
+CELERY_TASK_EAGER_PROPAGATES = True
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_TRACK_STARTED = True

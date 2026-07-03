@@ -60,6 +60,10 @@ def _obtener_registros_respuestas(parametros: dict[str, Any]) -> list[dict[str, 
         .order_by("sesion__fecha_inicio", "pregunta__orden")
     )
 
+    uuid_sesion = parametros.get("uuid_sesion")
+    if uuid_sesion:
+        consulta = consulta.filter(sesion__uuid_sesion=uuid_sesion)
+
     codigo_formulario = parametros.get("formulario_codigo") or parametros.get("formulario")
     if codigo_formulario:
         consulta = consulta.filter(sesion__formulario__codigo=codigo_formulario)
@@ -297,3 +301,15 @@ def obtener_exportacion(uuid_exportacion: UUID) -> Exportacion:
     if exportacion is None:
         raise ExportacionNoEncontradaError()
     return exportacion
+
+
+def generar_contenido_respuestas(
+    formato: str,
+    parametros: dict[str, Any] | None = None,
+) -> tuple[bytes, str, str]:
+    """Genera el contenido de respuestas para descarga directa sin persistir."""
+    parametros_exportacion = parametros or {}
+    registros = _obtener_registros_respuestas(parametros_exportacion)
+    generador = obtener_generador_exportacion(formato)
+    contenido = generador.generar(registros, parametros_exportacion)
+    return contenido, MIME_POR_FORMATO[formato], EXTENSION_POR_FORMATO[formato]

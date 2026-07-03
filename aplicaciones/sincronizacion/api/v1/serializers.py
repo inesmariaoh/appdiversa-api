@@ -4,6 +4,11 @@ Serializers de la API de sincronizacion offline.
 
 from rest_framework import serializers
 
+from aplicaciones.sincronizacion.models import (
+    ConflictoSincronizacion,
+    ResolucionConflicto,
+)
+
 
 class OperacionSincronizacionEntradaSerializer(serializers.Serializer):
     """Operacion individual dentro de un lote de sincronizacion."""
@@ -49,3 +54,35 @@ class SincronizarBatchSalidaSerializer(serializers.Serializer):
     duplicadas = serializers.IntegerField()
     conflictos = ResultadoOperacionConflictoSerializer(many=True)
     errores = ResultadoOperacionErrorSerializer(many=True)
+
+
+class ConflictoSincronizacionSerializer(serializers.ModelSerializer):
+    """Representa un conflicto de sincronizacion para el panel administrativo."""
+
+    resuelto = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ConflictoSincronizacion
+        fields = (
+            "uuid",
+            "uuid_local",
+            "respuesta",
+            "tipo_conflicto",
+            "valor_cliente",
+            "valor_servidor",
+            "resolucion",
+            "resuelto",
+            "fecha",
+        )
+        read_only_fields = fields
+
+    def get_resuelto(self, obj: ConflictoSincronizacion) -> bool:
+        """Indica si el conflicto ya tiene una resolucion aplicada."""
+        return bool(obj.resolucion)
+
+
+class ResolverConflictoEntradaSerializer(serializers.Serializer):
+    """Entrada para la resolucion manual de un conflicto."""
+
+    resolucion = serializers.ChoiceField(choices=ResolucionConflicto.choices)
+    valor_manual = serializers.JSONField(required=False)

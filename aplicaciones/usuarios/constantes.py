@@ -58,6 +58,7 @@ VARIABLES_PLANTILLAS_CORREO = (
     "correo",
     "username",
     "url_restaurar_password",
+    "url_verificar_correo",
     "url_login",
     "nombre_aplicativo",
     "formulario",
@@ -106,6 +107,21 @@ class MensajesAuth:
     )
     CONTRASENA_RESTAURADA = "La contraseña fue restaurada correctamente."
     TOKEN_RESTAURAR_INVALIDO = "El enlace de restauración no es válido o ha expirado."
+    CUENTA_ELIMINADA = "Tu cuenta fue eliminada correctamente."
+
+
+class MensajesVerificacionCorreo:
+    """Mensajes de respuesta para la verificacion de correo electronico."""
+
+    CORREO_VERIFICADO = "Tu correo electrónico fue verificado correctamente."
+    TOKEN_VERIFICACION_INVALIDO = (
+        "El enlace de verificación no es válido o ha expirado."
+    )
+    SOLICITUD_REENVIO = (
+        "Si el correo está registrado y pendiente de verificación, "
+        "recibirás un nuevo enlace de verificación."
+    )
+    YA_VERIFICADO = "El correo electrónico ya se encuentra verificado."
 
 
 class MensajesContacto:

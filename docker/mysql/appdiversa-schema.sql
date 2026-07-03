@@ -1,4 +1,4 @@
-﻿-- MySQL dump 10.13  Distrib 8.0.45, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.45, for Linux (x86_64)
 --
 -- Host: localhost    Database: appdiversa
 -- ------------------------------------------------------
@@ -64,7 +64,7 @@ CREATE TABLE `archivos_archivorepositorio` (
   CONSTRAINT `archivos_archivorepo_eliminado_por_id_813decfb_fk_auth_user` FOREIGN KEY (`eliminado_por_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `archivos_archivorepo_modificado_por_id_76f3e83a_fk_auth_user` FOREIGN KEY (`modificado_por_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `archivos_archivorepositorio_chk_1` CHECK ((`tamano_bytes` >= 0))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -96,7 +96,7 @@ CREATE TABLE `auditoria_registroauditoria` (
   KEY `auditoria_r_uuid_se_b64bae_idx` (`uuid_sesion_anonima`),
   KEY `auditoria_r_fecha_a_82c07a_idx` (`fecha_accion`),
   CONSTRAINT `auditoria_registroauditoria_usuario_id_5900964c_fk_auth_user_id` FOREIGN KEY (`usuario_id`) REFERENCES `auth_user` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1566 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -111,7 +111,7 @@ CREATE TABLE `auth_group` (
   `name` varchar(150) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -130,7 +130,7 @@ CREATE TABLE `auth_group_permissions` (
   KEY `auth_group_permissio_permission_id_84c5c92e_fk_auth_perm` (`permission_id`),
   CONSTRAINT `auth_group_permissio_permission_id_84c5c92e_fk_auth_perm` FOREIGN KEY (`permission_id`) REFERENCES `auth_permission` (`id`),
   CONSTRAINT `auth_group_permissions_group_id_b120cbf9_fk_auth_group_id` FOREIGN KEY (`group_id`) REFERENCES `auth_group` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -148,7 +148,7 @@ CREATE TABLE `auth_permission` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `auth_permission_content_type_id_codename_01ab375a_uniq` (`content_type_id`,`codename`),
   CONSTRAINT `auth_permission_content_type_id_2f476e4b_fk_django_co` FOREIGN KEY (`content_type_id`) REFERENCES `django_content_type` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=125 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=143 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -172,7 +172,7 @@ CREATE TABLE `auth_user` (
   `date_joined` datetime(6) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -191,7 +191,7 @@ CREATE TABLE `auth_user_groups` (
   KEY `auth_user_groups_group_id_97559544_fk_auth_group_id` (`group_id`),
   CONSTRAINT `auth_user_groups_group_id_97559544_fk_auth_group_id` FOREIGN KEY (`group_id`) REFERENCES `auth_group` (`id`),
   CONSTRAINT `auth_user_groups_user_id_6a12ed8b_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -248,7 +248,7 @@ CREATE TABLE `catalogos_catalogo` (
   CONSTRAINT `catalogos_catalogo_eliminado_por_id_9c26fd0f_fk_auth_user_id` FOREIGN KEY (`eliminado_por_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `catalogos_catalogo_modificado_por_id_47781eb0_fk_auth_user_id` FOREIGN KEY (`modificado_por_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `catalogos_catalogo_chk_1` CHECK ((`orden` >= 0))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -293,7 +293,73 @@ CREATE TABLE `catalogos_itemcatalogo` (
   CONSTRAINT `catalogos_itemcatalogo_creado_por_id_1d529ae5_fk_auth_user_id` FOREIGN KEY (`creado_por_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `catalogos_itemcatalogo_eliminado_por_id_16049184_fk_auth_user_id` FOREIGN KEY (`eliminado_por_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `catalogos_itemcatalogo_chk_1` CHECK ((`orden` >= 0))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2311 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `contenidos_configuracionflujoformulario`
+--
+
+DROP TABLE IF EXISTS `contenidos_configuracionflujoformulario`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `contenidos_configuracionflujoformulario` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `fecha_creacion` datetime(6) NOT NULL,
+  `fecha_modificacion` datetime(6) NOT NULL,
+  `fecha_eliminacion` datetime(6) DEFAULT NULL,
+  `esta_eliminado` tinyint(1) NOT NULL,
+  `uuid` char(32) NOT NULL,
+  `modal_salir_titulo` varchar(255) NOT NULL,
+  `modal_salir_p1` longtext NOT NULL,
+  `modal_salir_p2` longtext NOT NULL,
+  `modal_salir_btn_volver` varchar(255) NOT NULL,
+  `modal_salir_btn_salir` varchar(255) NOT NULL,
+  `modal_salir_link_sesion` varchar(255) NOT NULL,
+  `modal_sesion_titulo` varchar(255) NOT NULL,
+  `modal_sesion_parrafo` longtext NOT NULL,
+  `modal_sesion_btn_login` varchar(255) NOT NULL,
+  `modal_sesion_btn_registro` varchar(255) NOT NULL,
+  `modal_sesion_link_cancelar` varchar(255) NOT NULL,
+  `modal_guardado_titulo` varchar(255) NOT NULL,
+  `modal_guardado_parrafo` longtext NOT NULL,
+  `modal_guardado_btn_seguir` varchar(255) NOT NULL,
+  `modal_guardado_btn_otras` varchar(255) NOT NULL,
+  `terminos_titulo` varchar(500) NOT NULL,
+  `terminos_contenido` longtext NOT NULL,
+  `terminos_p1` longtext NOT NULL,
+  `terminos_p2` longtext NOT NULL,
+  `terminos_p3` longtext NOT NULL,
+  `terminos_url_ley` varchar(200) NOT NULL,
+  `terminos_url_politica_datos` varchar(200) NOT NULL,
+  `terminos_email_soporte` varchar(254) NOT NULL,
+  `esta_activa` tinyint(1) NOT NULL,
+  `configuracion_interfaz_id` bigint DEFAULT NULL,
+  `creado_por_id` int DEFAULT NULL,
+  `eliminado_por_id` int DEFAULT NULL,
+  `modificado_por_id` int DEFAULT NULL,
+  `terminos_boton_aceptar` varchar(255) NOT NULL,
+  `terminos_boton_cerrar` varchar(255) NOT NULL,
+  `terminos_enlace` varchar(255) NOT NULL,
+  `terminos_enlace_ley` varchar(255) NOT NULL,
+  `terminos_enlace_politica_datos` varchar(255) NOT NULL,
+  `img_enc_enviada_exito_id` bigint DEFAULT NULL,
+  `img_enc_enviada_exito_alt` varchar(500) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uuid` (`uuid`),
+  KEY `contenidos_configura_configuracion_interf_03171ab7_fk_contenido` (`configuracion_interfaz_id`),
+  KEY `contenidos_configura_creado_por_id_6821367b_fk_auth_user` (`creado_por_id`),
+  KEY `contenidos_configura_eliminado_por_id_8cf3b007_fk_auth_user` (`eliminado_por_id`),
+  KEY `contenidos_configura_modificado_por_id_54072935_fk_auth_user` (`modificado_por_id`),
+  KEY `contenidos__esta_ac_71bb10_idx` (`esta_activa`),
+  KEY `contenidos__uuid_7eb94f_idx` (`uuid`),
+  KEY `contenidos_configura_img_enc_enviada_exit_6dd986d5_fk_archivos_` (`img_enc_enviada_exito_id`),
+  CONSTRAINT `contenidos_configura_configuracion_interf_03171ab7_fk_contenido` FOREIGN KEY (`configuracion_interfaz_id`) REFERENCES `contenidos_configuracioninterfaz` (`id`),
+  CONSTRAINT `contenidos_configura_creado_por_id_6821367b_fk_auth_user` FOREIGN KEY (`creado_por_id`) REFERENCES `auth_user` (`id`),
+  CONSTRAINT `contenidos_configura_eliminado_por_id_8cf3b007_fk_auth_user` FOREIGN KEY (`eliminado_por_id`) REFERENCES `auth_user` (`id`),
+  CONSTRAINT `contenidos_configura_img_enc_enviada_exit_6dd986d5_fk_archivos_` FOREIGN KEY (`img_enc_enviada_exito_id`) REFERENCES `archivos_archivorepositorio` (`id`),
+  CONSTRAINT `contenidos_configura_modificado_por_id_54072935_fk_auth_user` FOREIGN KEY (`modificado_por_id`) REFERENCES `auth_user` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -342,6 +408,11 @@ CREATE TABLE `contenidos_configuracioninterfaz` (
   `logo_institucional_repositorio_id` bigint DEFAULT NULL,
   `logo_principal_repositorio_id` bigint DEFAULT NULL,
   `logo_secundario_repositorio_id` bigint DEFAULT NULL,
+  `email_remitente_notificaciones` varchar(254) NOT NULL,
+  `accesibilidad_comandos_voz_habilitada` tinyint(1) NOT NULL,
+  `accesibilidad_fuente_dislexia_habilitada` tinyint(1) NOT NULL,
+  `accesibilidad_lectura_voz_habilitada` tinyint(1) NOT NULL,
+  `accesibilidad_tema_por_defecto` varchar(20) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `contenidos__esta_ac_d3b1f1_idx` (`esta_activa`),
   KEY `contenidos_configura_creado_por_id_0e2a06db_fk_auth_user` (`creado_por_id`),
@@ -425,7 +496,7 @@ CREATE TABLE `django_admin_log` (
   CONSTRAINT `django_admin_log_content_type_id_c4bce8eb_fk_django_co` FOREIGN KEY (`content_type_id`) REFERENCES `django_content_type` (`id`),
   CONSTRAINT `django_admin_log_user_id_c564eba6_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `django_admin_log_chk_1` CHECK ((`action_flag` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -441,7 +512,7 @@ CREATE TABLE `django_content_type` (
   `model` varchar(100) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `django_content_type_app_label_model_76bd3d3b_uniq` (`app_label`,`model`)
-) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -457,7 +528,7 @@ CREATE TABLE `django_migrations` (
   `name` varchar(255) NOT NULL,
   `applied` datetime(6) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=53 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=93 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -522,39 +593,6 @@ CREATE TABLE `exportaciones_exportacion` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `formularios_catalogogeografico`
---
-
-DROP TABLE IF EXISTS `formularios_catalogogeografico`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `formularios_catalogogeografico` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `tipo` varchar(20) NOT NULL,
-  `codigo` varchar(50) NOT NULL,
-  `nombre` varchar(255) NOT NULL,
-  `codigo_padre` varchar(50) NOT NULL,
-  `esta_activo` tinyint(1) NOT NULL,
-  `fecha_creacion` datetime(6) NOT NULL,
-  `fecha_modificacion` datetime(6) NOT NULL,
-  `fecha_eliminacion` datetime(6) DEFAULT NULL,
-  `creado_por_id` int DEFAULT NULL,
-  `modificado_por_id` int DEFAULT NULL,
-  `eliminado_por_id` int DEFAULT NULL,
-  `esta_eliminado` tinyint(1) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_catalogo_geografico_tipo_codigo` (`tipo`,`codigo`),
-  KEY `formularios_esta_ac_c1b79d_idx` (`esta_activo`),
-  KEY `formularios_catalogo_creado_por_id_dcd1a55e_fk_auth_user` (`creado_por_id`),
-  KEY `formularios_catalogo_modificado_por_id_4f4d27ad_fk_auth_user` (`modificado_por_id`),
-  KEY `formularios_catalogo_eliminado_por_id_c8f5b82b_fk_auth_user` (`eliminado_por_id`),
-  CONSTRAINT `formularios_catalogo_creado_por_id_dcd1a55e_fk_auth_user` FOREIGN KEY (`creado_por_id`) REFERENCES `auth_user` (`id`),
-  CONSTRAINT `formularios_catalogo_eliminado_por_id_c8f5b82b_fk_auth_user` FOREIGN KEY (`eliminado_por_id`) REFERENCES `auth_user` (`id`),
-  CONSTRAINT `formularios_catalogo_modificado_por_id_4f4d27ad_fk_auth_user` FOREIGN KEY (`modificado_por_id`) REFERENCES `auth_user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Table structure for table `formularios_formulario`
 --
 
@@ -599,7 +637,7 @@ CREATE TABLE `formularios_formulario` (
   KEY `formularios_formular_modificado_por_id_0b43482d_fk_auth_user` (`modificado_por_id`),
   KEY `formularios_formulario_eliminado_por_id_b8a618bf_fk_auth_user_id` (`eliminado_por_id`),
   KEY `formularios_formular_imagen_portada_repos_558fca80_fk_archivos_` (`imagen_portada_repositorio_id`),
-  KEY `formularios_orden_4b8f2a_idx` (`orden`),
+  KEY `formularios_orden_6d3759_idx` (`orden`),
   CONSTRAINT `formularios_formular_imagen_portada_repos_558fca80_fk_archivos_` FOREIGN KEY (`imagen_portada_repositorio_id`) REFERENCES `archivos_archivorepositorio` (`id`),
   CONSTRAINT `formularios_formular_modificado_por_id_0b43482d_fk_auth_user` FOREIGN KEY (`modificado_por_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `formularios_formulario_creado_por_id_93b46271_fk_auth_user_id` FOREIGN KEY (`creado_por_id`) REFERENCES `auth_user` (`id`),
@@ -607,7 +645,7 @@ CREATE TABLE `formularios_formulario` (
   CONSTRAINT `formularios_formulario_chk_1` CHECK ((`tiempo_estimado_minutos` >= 0)),
   CONSTRAINT `formularios_formulario_chk_2` CHECK ((`version_actual` >= 0)),
   CONSTRAINT `formularios_formulario_chk_3` CHECK ((`orden` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -643,7 +681,7 @@ CREATE TABLE `formularios_formularioversion` (
   CONSTRAINT `formularios_formular_formulario_id_99d1a277_fk_formulari` FOREIGN KEY (`formulario_id`) REFERENCES `formularios_formulario` (`id`),
   CONSTRAINT `formularios_formular_modificado_por_id_c3dcbbb1_fk_auth_user` FOREIGN KEY (`modificado_por_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `formularios_formularioversion_chk_1` CHECK ((`numero_version` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -671,6 +709,7 @@ CREATE TABLE `formularios_opcionrespuesta` (
   `modificado_por_id` int DEFAULT NULL,
   `eliminado_por_id` int DEFAULT NULL,
   `esta_eliminado` tinyint(1) NOT NULL,
+  `tiene_tooltip` tinyint(1) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_opcion_respuesta_pregunta_codigo` (`pregunta_id`,`codigo`),
   KEY `formularios_orden_70ecfd_idx` (`orden`),
@@ -683,7 +722,7 @@ CREATE TABLE `formularios_opcionrespuesta` (
   CONSTRAINT `formularios_opcionre_modificado_por_id_7ae5d641_fk_auth_user` FOREIGN KEY (`modificado_por_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `formularios_opcionre_pregunta_id_bfc17970_fk_formulari` FOREIGN KEY (`pregunta_id`) REFERENCES `formularios_pregunta` (`id`),
   CONSTRAINT `formularios_opcionrespuesta_chk_1` CHECK ((`orden` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=148 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -726,6 +765,16 @@ CREATE TABLE `formularios_pregunta` (
   `permite_busqueda_catalogo` tinyint(1) NOT NULL,
   `pregunta_padre_catalogo_id` bigint DEFAULT NULL,
   `usa_catalogo` tinyint(1) NOT NULL,
+  `tiene_tooltip` tinyint(1) NOT NULL,
+  `visible_por_defecto` tinyint(1) NOT NULL,
+  `limpiar_respuesta_al_ocultar` tinyint(1) NOT NULL,
+  `pregunta_origen_flujo_id` bigint DEFAULT NULL,
+  `codigo_catalogo_departamento` varchar(50) NOT NULL,
+  `bloquea_continuacion_si_no_cumple` tinyint(1) NOT NULL,
+  `mensaje_no_cumple` longtext NOT NULL,
+  `tipo_validacion_filtro` varchar(30) NOT NULL,
+  `valor_filtro_esperado` json DEFAULT NULL,
+  `texto_otro_obligatorio` tinyint(1) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_pregunta_seccion_codigo` (`seccion_id`,`codigo`),
   KEY `formularios_tipo_pr_dc8b82_idx` (`tipo_pregunta`),
@@ -736,17 +785,19 @@ CREATE TABLE `formularios_pregunta` (
   KEY `formularios_pregunta_eliminado_por_id_dd0179cb_fk_auth_user_id` (`eliminado_por_id`),
   KEY `formularios_pregunta_catalogo_asociado_id_6546e4e5_fk_catalogos` (`catalogo_asociado_id`),
   KEY `formularios_pregunta_pregunta_padre_catal_d88cf9cc_fk_formulari` (`pregunta_padre_catalogo_id`),
+  KEY `formularios_pregunta_pregunta_origen_fluj_a3239039_fk_formulari` (`pregunta_origen_flujo_id`),
   CONSTRAINT `formularios_pregunta_catalogo_asociado_id_6546e4e5_fk_catalogos` FOREIGN KEY (`catalogo_asociado_id`) REFERENCES `catalogos_catalogo` (`id`),
   CONSTRAINT `formularios_pregunta_creado_por_id_407ddcfa_fk_auth_user_id` FOREIGN KEY (`creado_por_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `formularios_pregunta_eliminado_por_id_dd0179cb_fk_auth_user_id` FOREIGN KEY (`eliminado_por_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `formularios_pregunta_modificado_por_id_4367f049_fk_auth_user_id` FOREIGN KEY (`modificado_por_id`) REFERENCES `auth_user` (`id`),
+  CONSTRAINT `formularios_pregunta_pregunta_origen_fluj_a3239039_fk_formulari` FOREIGN KEY (`pregunta_origen_flujo_id`) REFERENCES `formularios_pregunta` (`id`),
   CONSTRAINT `formularios_pregunta_pregunta_padre_catal_d88cf9cc_fk_formulari` FOREIGN KEY (`pregunta_padre_catalogo_id`) REFERENCES `formularios_pregunta` (`id`),
   CONSTRAINT `formularios_pregunta_seccion_id_7cb5db7c_fk_formulari` FOREIGN KEY (`seccion_id`) REFERENCES `formularios_seccionformulario` (`id`),
   CONSTRAINT `formularios_pregunta_chk_1` CHECK ((`orden` >= 0)),
   CONSTRAINT `formularios_pregunta_chk_2` CHECK ((`longitud_minima` >= 0)),
   CONSTRAINT `formularios_pregunta_chk_3` CHECK ((`longitud_maxima` >= 0)),
   CONSTRAINT `formularios_pregunta_chk_4` CHECK ((`limite_items_catalogo` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -783,7 +834,7 @@ CREATE TABLE `formularios_preguntamatrizcolumna` (
   CONSTRAINT `formularios_pregunta_modificado_por_id_5a8e0cd6_fk_auth_user` FOREIGN KEY (`modificado_por_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `formularios_pregunta_pregunta_id_8fc373e8_fk_formulari` FOREIGN KEY (`pregunta_id`) REFERENCES `formularios_pregunta` (`id`),
   CONSTRAINT `formularios_preguntamatrizcolumna_chk_1` CHECK ((`orden` >= 0))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -819,7 +870,7 @@ CREATE TABLE `formularios_preguntamatrizfila` (
   CONSTRAINT `formularios_pregunta_modificado_por_id_a80f54ba_fk_auth_user` FOREIGN KEY (`modificado_por_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `formularios_pregunta_pregunta_id_e0e56ab3_fk_formulari` FOREIGN KEY (`pregunta_id`) REFERENCES `formularios_pregunta` (`id`),
   CONSTRAINT `formularios_preguntamatrizfila_chk_1` CHECK ((`orden` >= 0))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -860,7 +911,7 @@ CREATE TABLE `formularios_reglapregunta` (
   CONSTRAINT `formularios_reglapre_pregunta_origen_id_bc7c4cf4_fk_formulari` FOREIGN KEY (`pregunta_origen_id`) REFERENCES `formularios_pregunta` (`id`),
   CONSTRAINT `formularios_reglapre_seccion_destino_id_a11b476b_fk_formulari` FOREIGN KEY (`seccion_destino_id`) REFERENCES `formularios_seccionformulario` (`id`),
   CONSTRAINT `formularios_reglapregunta_creado_por_id_68ca3eb8_fk_auth_user_id` FOREIGN KEY (`creado_por_id`) REFERENCES `auth_user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -899,7 +950,7 @@ CREATE TABLE `formularios_seccionformulario` (
   CONSTRAINT `formularios_seccionf_formulario_version_i_8b7167bf_fk_formulari` FOREIGN KEY (`formulario_version_id`) REFERENCES `formularios_formularioversion` (`id`),
   CONSTRAINT `formularios_seccionf_modificado_por_id_b5f0966c_fk_auth_user` FOREIGN KEY (`modificado_por_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `formularios_seccionformulario_chk_1` CHECK ((`orden` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1060,6 +1111,9 @@ CREATE TABLE `notificaciones_notificacion` (
   `eliminado_por_id` int DEFAULT NULL,
   `modificado_por_id` int DEFAULT NULL,
   `plantilla_id` bigint DEFAULT NULL,
+  `contenido_texto_generado` longtext NOT NULL,
+  `contenido_html_generado` longtext NOT NULL,
+  `reply_to` varchar(500) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uuid` (`uuid`),
   KEY `notificacio_uuid_debbb2_idx` (`uuid`),
@@ -1075,7 +1129,7 @@ CREATE TABLE `notificaciones_notificacion` (
   CONSTRAINT `notificaciones_notif_modificado_por_id_c2832f5c_fk_auth_user` FOREIGN KEY (`modificado_por_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `notificaciones_notif_plantilla_id_03a229aa_fk_notificac` FOREIGN KEY (`plantilla_id`) REFERENCES `notificaciones_plantillanotificacion` (`id`),
   CONSTRAINT `notificaciones_notificacion_chk_1` CHECK ((`numero_intentos` >= 0))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1117,7 +1171,7 @@ CREATE TABLE `notificaciones_plantillanotificacion` (
   CONSTRAINT `notificaciones_plant_creado_por_id_be2633e9_fk_auth_user` FOREIGN KEY (`creado_por_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `notificaciones_plant_eliminado_por_id_3a20b5dd_fk_auth_user` FOREIGN KEY (`eliminado_por_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `notificaciones_plant_modificado_por_id_25088502_fk_auth_user` FOREIGN KEY (`modificado_por_id`) REFERENCES `auth_user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1179,7 +1233,7 @@ CREATE TABLE `respuestas_respuesta` (
   CONSTRAINT `respuestas_respuesta_sesion_id_d7dac742_fk_sesiones_` FOREIGN KEY (`sesion_id`) REFERENCES `sesiones_anonimas_sesionanonima` (`id`),
   CONSTRAINT `respuestas_respuesta_chk_1` CHECK ((`version_respuesta` >= 0)),
   CONSTRAINT `respuestas_respuesta_chk_2` CHECK ((`version_cliente` >= 0))
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=415 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1211,6 +1265,7 @@ CREATE TABLE `sesiones_anonimas_sesionanonima` (
   `modificado_por_id` int DEFAULT NULL,
   `eliminado_por_id` int DEFAULT NULL,
   `esta_eliminado` tinyint(1) NOT NULL,
+  `usuario_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uuid_sesion` (`uuid_sesion`),
   KEY `sesiones_an_uuid_se_8c8060_idx` (`uuid_sesion`),
@@ -1220,12 +1275,14 @@ CREATE TABLE `sesiones_anonimas_sesionanonima` (
   KEY `sesiones_anonimas_se_creado_por_id_412f1d58_fk_auth_user` (`creado_por_id`),
   KEY `sesiones_anonimas_se_modificado_por_id_2402dc1f_fk_auth_user` (`modificado_por_id`),
   KEY `sesiones_anonimas_se_eliminado_por_id_720d00e0_fk_auth_user` (`eliminado_por_id`),
+  KEY `sesiones_an_usuario_idx` (`usuario_id`),
   CONSTRAINT `sesiones_anonimas_se_creado_por_id_412f1d58_fk_auth_user` FOREIGN KEY (`creado_por_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `sesiones_anonimas_se_eliminado_por_id_720d00e0_fk_auth_user` FOREIGN KEY (`eliminado_por_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `sesiones_anonimas_se_formulario_id_d4ae289c_fk_formulari` FOREIGN KEY (`formulario_id`) REFERENCES `formularios_formulario` (`id`),
   CONSTRAINT `sesiones_anonimas_se_modificado_por_id_2402dc1f_fk_auth_user` FOREIGN KEY (`modificado_por_id`) REFERENCES `auth_user` (`id`),
+  CONSTRAINT `sesiones_anonimas_se_usuario_id_a3b0cffb_fk_auth_user` FOREIGN KEY (`usuario_id`) REFERENCES `auth_user` (`id`),
   CONSTRAINT `sesiones_anonimas_se_version_formulario_i_d8df821d_fk_formulari` FOREIGN KEY (`version_formulario_id`) REFERENCES `formularios_formularioversion` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=119 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1288,6 +1345,38 @@ CREATE TABLE `sincronizacion_operacionsincronizacion` (
   KEY `sincronizac_uuid_se_c042d0_idx` (`uuid_sesion`,`uuid_local`),
   CONSTRAINT `sincronizacion_operacionsincronizacion_chk_1` CHECK ((`version_cliente` >= 0)),
   CONSTRAINT `sincronizacion_operacionsincronizacion_chk_2` CHECK ((`numero_reintentos` >= 0))
+) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `usuarios_permisosistema`
+--
+
+DROP TABLE IF EXISTS `usuarios_permisosistema`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `usuarios_permisosistema` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `usuarios_verificacioncorreo`
+--
+
+DROP TABLE IF EXISTS `usuarios_verificacioncorreo`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `usuarios_verificacioncorreo` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `verificado` tinyint(1) NOT NULL,
+  `fecha_creacion` datetime(6) NOT NULL,
+  `fecha_verificacion` datetime(6) DEFAULT NULL,
+  `usuario_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `usuario_id` (`usuario_id`),
+  CONSTRAINT `usuarios_verificacioncorreo_usuario_id_c346317b_fk_auth_user_id` FOREIGN KEY (`usuario_id`) REFERENCES `auth_user` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1304,4 +1393,4 @@ CREATE TABLE `sincronizacion_operacionsincronizacion` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-07-01  1:34:05
+-- Dump completed on 2026-07-03  0:56:26

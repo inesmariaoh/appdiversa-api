@@ -7,7 +7,11 @@ from django.test import override_settings, TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from aplicaciones.contenidos.constantes import ValoresPorDefectoInterfaz
+from aplicaciones.contenidos.constantes import (
+    TemaInterfaz,
+    ValoresPorDefectoAccesibilidad,
+    ValoresPorDefectoInterfaz,
+)
 from aplicaciones.contenidos.models import ConfiguracionInterfaz, LogoInterfaz
 
 URL_CONFIGURACION = "/api/v1/interfaz/configuracion/"
@@ -139,6 +143,43 @@ class ConfiguracionInterfazApiTests(TestCase):
         self.assertFalse(datos["accion_lengua_senas_habilitada"])
         self.assertEqual(datos["url_lengua_senas"], "")
         self.assertEqual(datos["texto_lengua_senas"], "")
+
+    def test_accesibilidad_valores_por_defecto_sin_configuracion(self) -> None:
+        respuesta = self.cliente.get(URL_CONFIGURACION)
+
+        self.assertEqual(respuesta.status_code, status.HTTP_200_OK)
+        accesibilidad = respuesta.json()["accesibilidad"]
+        self.assertEqual(
+            accesibilidad["lectura_voz_habilitada"],
+            ValoresPorDefectoAccesibilidad.LECTURA_VOZ_HABILITADA,
+        )
+        self.assertFalse(accesibilidad["comandos_voz_habilitada"])
+        self.assertFalse(accesibilidad["lengua_senas_habilitada"])
+        self.assertFalse(accesibilidad["fuente_dislexia_habilitada"])
+        self.assertEqual(accesibilidad["tema_por_defecto"], TemaInterfaz.CLARO)
+
+    def test_accesibilidad_refleja_configuracion_activa(self) -> None:
+        ConfiguracionInterfaz.objects.create(
+            nombre_aplicativo="DiversApp",
+            accion_lengua_senas_habilitada=True,
+            accesibilidad_lectura_voz_habilitada=True,
+            accesibilidad_comandos_voz_habilitada=True,
+            accesibilidad_fuente_dislexia_habilitada=True,
+            accesibilidad_tema_por_defecto=TemaInterfaz.ALTO_CONTRASTE,
+            esta_activa=True,
+        )
+
+        respuesta = self.cliente.get(URL_CONFIGURACION)
+
+        self.assertEqual(respuesta.status_code, status.HTTP_200_OK)
+        accesibilidad = respuesta.json()["accesibilidad"]
+        self.assertTrue(accesibilidad["comandos_voz_habilitada"])
+        self.assertTrue(accesibilidad["lengua_senas_habilitada"])
+        self.assertTrue(accesibilidad["fuente_dislexia_habilitada"])
+        self.assertEqual(
+            accesibilidad["tema_por_defecto"],
+            TemaInterfaz.ALTO_CONTRASTE,
+        )
 
     def test_configuracion_no_incluye_contenido_accesible_por_defecto(self) -> None:
         ConfiguracionInterfaz.objects.create(

@@ -27,10 +27,7 @@ from aplicaciones.exportaciones.constantes import (
     MensajesExportacionApi,
     TipoExportacion,
 )
-from aplicaciones.exportaciones.excepciones import (
-    ExportacionNoEncontradaError,
-    FormatoExportacionNoSoportadoError,
-)
+from aplicaciones.exportaciones.excepciones import ExportacionNoEncontradaError
 from aplicaciones.exportaciones.generadores import (
     CsvExportador,
     OdsExportador,
@@ -38,6 +35,8 @@ from aplicaciones.exportaciones.generadores import (
     generar_csv,
     generar_excel,
     generar_json,
+    generar_ods,
+    generar_pdf,
     generar_sql,
 )
 from aplicaciones.exportaciones.servicios import (
@@ -142,11 +141,23 @@ class ExportacionesGeneradoresTests(TestCase):
         contenido = CsvExportador().generar([], {})
         self.assertEqual(contenido, b"")
 
-    def test_pdf_y_ods_no_soportados(self) -> None:
-        with self.assertRaises(FormatoExportacionNoSoportadoError):
-            PdfExportador().generar(REGISTROS_PRUEBA, {})
-        with self.assertRaises(FormatoExportacionNoSoportadoError):
-            OdsExportador().generar(REGISTROS_PRUEBA, {})
+    def test_generar_pdf(self) -> None:
+        contenido = generar_pdf(REGISTROS_PRUEBA, {"titulo": "Reporte"})
+        self.assertGreater(len(contenido), 0)
+        self.assertEqual(contenido[:4], b"%PDF")
+
+    def test_generar_pdf_vacio(self) -> None:
+        contenido = PdfExportador().generar([], {})
+        self.assertEqual(contenido[:4], b"%PDF")
+
+    def test_generar_ods(self) -> None:
+        contenido = generar_ods(REGISTROS_PRUEBA, {})
+        self.assertGreater(len(contenido), 0)
+        self.assertEqual(contenido[:2], b"PK")
+
+    def test_generar_ods_vacio(self) -> None:
+        contenido = OdsExportador().generar([], {})
+        self.assertEqual(contenido[:2], b"PK")
 
 
 class ExportacionesServiciosTests(TestCase):
@@ -235,16 +246,32 @@ class ExportacionesServiciosTests(TestCase):
             {EstadoExportacion.FINALIZADA, EstadoExportacion.FALLIDA},
         )
 
-    def test_exportar_pdf_fallida(self) -> None:
-        exportacion = exportar_catalogos(
+    def test_exportar_respuestas_pdf_finalizada(self) -> None:
+        exportacion = exportar_respuestas(
             formato=FormatoExportacion.PDF,
-            parametros={},
+            parametros={"formulario_codigo": "form_export", "titulo": "Respuestas"},
         )
-        self.assertEqual(exportacion.estado, EstadoExportacion.FALLIDA)
-        self.assertEqual(
-            exportacion.error,
-            MensajesExportacionApi.FORMATO_NO_SOPORTADO,
+        self.assertEqual(exportacion.estado, EstadoExportacion.FINALIZADA)
+        self.assertIsNotNone(exportacion.archivo_id)
+
+    def test_exportar_catalogos_ods_finalizada(self) -> None:
+        catalogo = crear_catalogo_si_no_existe(
+            codigo="export_cat_ods",
+            nombre="Catalogo ODS",
+            tipo_catalogo=TiposCatalogo.DEMOGRAFICO,
         )
+        crear_item_catalogo_si_no_existe(
+            catalogo=catalogo,
+            codigo="01",
+            nombre="Item ODS",
+            valor="01",
+        )
+        exportacion = exportar_catalogos(
+            formato=FormatoExportacion.ODS,
+            parametros={"catalogo_codigo": "export_cat_ods"},
+        )
+        self.assertEqual(exportacion.estado, EstadoExportacion.FINALIZADA)
+        self.assertIsNotNone(exportacion.archivo_id)
 
     def test_obtener_exportacion_inexistente(self) -> None:
         with self.assertRaises(ExportacionNoEncontradaError):
@@ -326,3 +353,73 @@ class ExportacionesApiTests(TestCase):
             respuesta.json()["detalle"],
             MensajesExportacionApi.EXPORTACION_NO_ENCONTRADA,
         )
+
+
+class ExportacionesAdminApiTests(TestCase):
+    """Pruebas de los endpoints administrativos de exportacion por RBAC."""
+
+    URL_ADMIN_RESPUESTAS = "/api/v1/admin/exportaciones/respuestas/"
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        from aplicaciones.usuarios.tests.helpers import inicializar_entorno_usuarios
+
+        inicializar_entorno_usuarios()
+
+    def setUp(self) -> None:
+        self.cliente = APIClient()
+        crear_contexto_respuesta_exportacion()
+
+    def _autenticar(self, username: str, grupo: str) -> None:
+        from aplicaciones.usuarios.tests.helpers import (
+            CONTRASENA_PRUEBA,
+            URL_LOGIN,
+            crear_usuario_prueba,
+        )
+
+        crear_usuario_prueba(username, grupo=grupo)
+        self.cliente.post(
+            URL_LOGIN,
+            {"username": username, "password": CONTRASENA_PRUEBA},
+            format="json",
+        )
+
+    def test_admin_exportar_respuestas_pdf(self) -> None:
+        from aplicaciones.usuarios.constantes import GrupoSistema
+
+        self._autenticar("analista_export", GrupoSistema.ANALISTA_DATOS)
+        respuesta = self.cliente.post(
+            self.URL_ADMIN_RESPUESTAS,
+            {
+                "formato": FormatoExportacion.PDF,
+                "parametros": {"formulario_codigo": "form_export"},
+            },
+            format="json",
+        )
+        self.assertEqual(respuesta.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(respuesta.json()["estado"], EstadoExportacion.FINALIZADA)
+
+    def test_admin_exportar_denegado_a_rol_sin_permiso(self) -> None:
+        from aplicaciones.usuarios.constantes import GrupoSistema
+
+        self._autenticar("lector_export", GrupoSistema.LECTOR_FORMULARIOS)
+        respuesta = self.cliente.post(
+            self.URL_ADMIN_RESPUESTAS,
+            {"formato": FormatoExportacion.CSV, "parametros": {}},
+            format="json",
+        )
+        self.assertEqual(respuesta.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_admin_descargar_exportacion(self) -> None:
+        from aplicaciones.usuarios.constantes import GrupoSistema
+
+        self._autenticar("analista_descarga", GrupoSistema.ANALISTA_DATOS)
+        creada = exportar_respuestas(
+            formato=FormatoExportacion.CSV,
+            parametros={"formulario_codigo": "form_export"},
+        )
+        url = f"/api/v1/admin/exportaciones/{creada.uuid}/descargar/"
+        respuesta = self.cliente.get(url)
+        self.assertEqual(respuesta.status_code, status.HTTP_200_OK)
+        self.assertIn("attachment", respuesta["Content-Disposition"])

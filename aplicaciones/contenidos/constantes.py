@@ -28,6 +28,32 @@ class ValoresPorDefectoInterfaz:
     COLOR_ACENTO = ""
 
 
+class TemaInterfaz:
+    """Temas de contraste seleccionables en la interfaz."""
+
+    CLARO = "claro"
+    OSCURO = "oscuro"
+    ALTO_CONTRASTE = "alto_contraste"
+
+    OPCIONES: tuple[tuple[str, str], ...] = (
+        (CLARO, "Claro"),
+        (OSCURO, "Oscuro"),
+        (ALTO_CONTRASTE, "Alto contraste"),
+    )
+
+
+class ValoresPorDefectoAccesibilidad:
+    """Banderas por defecto de las funcionalidades de accesibilidad."""
+
+    LECTURA_VOZ_HABILITADA = True
+    COMANDOS_VOZ_HABILITADA = False
+    LENGUA_SENAS_HABILITADA = False
+    FUENTE_DISLEXIA_HABILITADA = False
+    TEMA_POR_DEFECTO = TemaInterfaz.CLARO
+    CENTRO_RELEVO_HABILITADO = False
+    URL_CENTRO_RELEVO = ""
+
+
 class ValoresPorDefectoFlujoFormulario:
     """Textos por defecto de modales y terminos del flujo de formularios."""
 

@@ -46,6 +46,20 @@ PLANTILLAS_BASE: dict[str, dict] = {
             "Inicia sesión en {{url_login}}"
         ),
     },
+    "verificacion_correo": {
+        "nombre": "Verificación de correo",
+        "asunto": "Verifica tu correo - {{nombre_aplicativo}}",
+        "contenido_html": (
+            "<p>Hola {{nombre}},</p>"
+            "<p>Para completar tu registro, verifica tu correo electrónico.</p>"
+            "<p><a href=\"{{url_verificar_correo}}\">Verificar correo</a></p>"
+            "<p>Si no creaste esta cuenta, ignora este mensaje.</p>"
+        ),
+        "contenido_texto": (
+            "Hola {{nombre}}, verifica tu correo con el siguiente enlace: "
+            "{{url_verificar_correo}}"
+        ),
+    },
     "formulario_finalizado": {
         "nombre": "Formulario finalizado",
         "asunto": "Formulario {{formulario}} finalizado",

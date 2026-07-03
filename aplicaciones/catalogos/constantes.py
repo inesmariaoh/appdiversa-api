@@ -10,6 +10,16 @@ class MensajesCatalogoApi:
     ITEM_NO_ENCONTRADO = "El ítem solicitado no existe o no está disponible."
 
 
+class MensajesCatalogoAdmin:
+    """Mensajes de la API administrativa de catalogos."""
+
+    SIN_PERMISO = "No tiene permisos para administrar catálogos."
+    CODIGO_DUPLICADO = "Ya existe un catálogo con el código indicado."
+    ITEM_CODIGO_DUPLICADO = "Ya existe un ítem con el código indicado en el catálogo."
+    CATALOGO_PROTEGIDO = "El catálogo del sistema no puede eliminarse."
+    ITEM_PADRE_NO_ENCONTRADO = "El ítem padre indicado no existe en el catálogo."
+
+
 LIMITE_MAXIMO_ITEMS_CATALOGO = 1000
 
 

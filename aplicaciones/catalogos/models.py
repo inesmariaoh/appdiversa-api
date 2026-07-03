@@ -2,13 +2,15 @@
 Modelos de catalogos parametrizables empresariales.
 
 Los catalogos reutilizables (paises, departamentos, ocupaciones, estratos, etc.)
-se administran desde Django Admin y se exponen por API.
+se administran desde Django Admin y desde la API administrativa, y se exponen por
+la API publica.
 
-El modelo CatalogoGeografico en formularios permanece como especializacion geografica
-compatible; en una fase posterior puede migrarse o sincronizarse con esta app.
+Los catalogos geograficos quedaron unificados en esta app: cada nivel se modela
+como un catalogo y cada ubicacion como un item, conservando la jerarquia en los
+metadatos del item.
 
 Las preguntas tipo select, autocomplete, radio o checkbox del motor de formularios
-podran consumir estos catalogos mediante parametrizacion en una fase posterior.
+consumen estos catalogos mediante parametrizacion.
 """
 
 from django.db import models

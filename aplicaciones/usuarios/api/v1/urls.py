@@ -17,15 +17,19 @@ from aplicaciones.usuarios.api.v1.views import (
     CambiarPasswordView,
     ContactoView,
     CsrfCookieView,
+    EliminarCuentaView,
     LoginView,
     LogoutView,
     MeView,
+    MisRespuestasExportarView,
     MisRespuestasView,
     PerfilView,
+    ReenviarVerificacionView,
     RegistroCorreoView,
     RegistroView,
     RestaurarPasswordView,
     SolicitarRestaurarPasswordView,
+    VerificarCorreoView,
 )
 
 urlpatterns_auth = [
@@ -35,7 +39,13 @@ urlpatterns_auth = [
     path("me/", MeView.as_view(), name="auth-me"),
     path("perfil/", PerfilView.as_view(), name="auth-perfil"),
     path("mis-respuestas/", MisRespuestasView.as_view(), name="auth-mis-respuestas"),
+    path(
+        "mis-respuestas/<uuid:uuid_sesion>/exportar/",
+        MisRespuestasExportarView.as_view(),
+        name="auth-mis-respuestas-exportar",
+    ),
     path("cambiar-password/", CambiarPasswordView.as_view(), name="auth-cambiar-password"),
+    path("eliminar-cuenta/", EliminarCuentaView.as_view(), name="auth-eliminar-cuenta"),
     path("registro/", RegistroView.as_view(), name="auth-registro"),
     path("registro/correo/", RegistroCorreoView.as_view(), name="auth-registro-correo"),
     path(
@@ -47,6 +57,16 @@ urlpatterns_auth = [
         "restaurar-password/",
         RestaurarPasswordView.as_view(),
         name="auth-restaurar-password",
+    ),
+    path(
+        "verificar-correo/",
+        VerificarCorreoView.as_view(),
+        name="auth-verificar-correo",
+    ),
+    path(
+        "reenviar-verificacion/",
+        ReenviarVerificacionView.as_view(),
+        name="auth-reenviar-verificacion",
     ),
 ]
 

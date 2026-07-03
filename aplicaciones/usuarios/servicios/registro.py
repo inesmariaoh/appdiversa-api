@@ -2,6 +2,7 @@
 Servicios de registro de usuarios.
 """
 
+import logging
 import re
 
 from django.contrib.auth import get_user_model
@@ -12,6 +13,7 @@ from django.db import transaction
 from aplicaciones.auditoria.constantes import AccionAuditoria
 from aplicaciones.auditoria.servicios import registrar_auditoria
 from aplicaciones.notificaciones.constantes import CodigoPlantillaCorreo
+from aplicaciones.notificaciones.excepciones import PlantillaNotificacionNoEncontradaError
 from aplicaciones.notificaciones.servicios import enviar_notificacion
 from aplicaciones.notificaciones.servicios_correo import obtener_nombre_aplicativo
 from aplicaciones.usuarios.constantes import GrupoSistema
@@ -22,8 +24,10 @@ from aplicaciones.usuarios.excepciones import (
 )
 from aplicaciones.usuarios.selectores import existe_email, existe_username
 from aplicaciones.usuarios.servicios.autenticacion import validar_contrasena_django
+from aplicaciones.usuarios.servicios.verificacion_correo import enviar_verificacion_correo
 
 User = get_user_model()
+_logger = logging.getLogger(__name__)
 
 CODIGO_PLANTILLA_CONFIRMACION = CodigoPlantillaCorreo.CONFIRMACION_REGISTRO
 LONGITUD_MAXIMA_USERNAME = 150
@@ -54,6 +58,17 @@ def _enviar_correo_bienvenida(usuario: AbstractBaseUser) -> None:
             "nombre_aplicativo": obtener_nombre_aplicativo(),
         },
     )
+
+
+def _notificar_registro(usuario: AbstractBaseUser) -> None:
+    """Envia los correos de registro sin interrumpir el alta del usuario."""
+    try:
+        _enviar_correo_bienvenida(usuario)
+        enviar_verificacion_correo(usuario)
+    except PlantillaNotificacionNoEncontradaError:
+        _logger.warning(
+            "No se enviaron los correos de registro: plantilla no disponible o inactiva.",
+        )
 
 
 @transaction.atomic
@@ -89,7 +104,7 @@ def registrar_usuario(datos: dict) -> AbstractBaseUser:
         valor_nuevo={"username": usuario.username, "email": usuario.email},
         descripcion="Registro de usuario desde la API publica.",
     )
-    _enviar_correo_bienvenida(usuario)
+    _notificar_registro(usuario)
     return usuario
 
 

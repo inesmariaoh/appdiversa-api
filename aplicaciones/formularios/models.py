@@ -151,14 +151,6 @@ class AccionRegla(models.TextChoices):
     NO_APLICA_FORMULARIO = "no_aplica_formulario", "No aplica formulario"
 
 
-class TipoCatalogoGeografico(models.TextChoices):
-    """Niveles del catalogo geografico."""
-
-    PAIS = "pais", "País"
-    DEPARTAMENTO = "departamento", "Departamento"
-    MUNICIPIO = "municipio", "Municipio"
-
-
 TIPOS_PREGUNTA_CATALOGO = frozenset(
     {
         TipoPregunta.RADIO,
@@ -697,30 +689,3 @@ class ReglaPregunta(AuditoriaModeloAbstracto):
 
     def __str__(self) -> str:
         return f"Regla {self.pregunta_origen.codigo} -> {self.accion}"
-
-
-class CatalogoGeografico(AuditoriaModeloAbstracto):
-    """Catalogo geografico parametrizable para preguntas de ubicacion."""
-
-    tipo = models.CharField(max_length=20, choices=TipoCatalogoGeografico.choices)
-    codigo = models.CharField(max_length=50)
-    nombre = models.CharField(max_length=255)
-    codigo_padre = models.CharField(max_length=50, blank=True)
-    esta_activo = models.BooleanField(default=True)
-
-    class Meta:
-        ordering = ["tipo", "nombre"]
-        constraints = [
-            models.UniqueConstraint(
-                fields=["tipo", "codigo"],
-                name="uq_catalogo_geografico_tipo_codigo",
-            ),
-        ]
-        indexes = [
-            models.Index(fields=["esta_activo"]),
-        ]
-        verbose_name = "Catálogo geográfico"
-        verbose_name_plural = "Catálogos geográficos"
-
-    def __str__(self) -> str:
-        return f"{self.tipo} - {self.codigo} - {self.nombre}"

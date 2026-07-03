@@ -6,7 +6,6 @@ from django.contrib import admin
 
 from aplicaciones.auditoria.admin_mixins import ModeloAuditableAdminMixin
 from aplicaciones.formularios.models import (
-    CatalogoGeografico,
     Formulario,
     FormularioVersion,
     OpcionRespuesta,
@@ -371,13 +370,3 @@ class ReglaPreguntaAdmin(ModeloAuditableAdmin):
         "pregunta_destino",
         "seccion_destino",
     )
-
-
-@admin.register(CatalogoGeografico)
-class CatalogoGeograficoAdmin(ModeloAuditableAdmin):
-    """Administracion del catalogo geografico."""
-
-    list_display = ("tipo", "codigo", "nombre", "codigo_padre", "esta_activo")
-    search_fields = ("codigo", "nombre", "codigo_padre")
-    list_filter = ("tipo", "esta_activo")
-    ordering = ("tipo", "nombre")

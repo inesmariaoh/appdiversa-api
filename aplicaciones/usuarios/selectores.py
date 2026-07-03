@@ -117,3 +117,12 @@ def usuario_tiene_permiso_publicar_formularios(usuario: User) -> bool:
     return usuario.has_perm(
         f"usuarios.{PermisoCodigo.PUBLICAR_FORMULARIOS}",
     ) or usuario.has_perm(f"usuarios.{PermisoCodigo.VERSIONAR_FORMULARIOS}")
+
+
+def usuario_tiene_permiso_exportar_respuestas(usuario: User) -> bool:
+    """Indica si el usuario puede exportar respuestas para analisis."""
+    if not usuario.is_authenticated:
+        return False
+    if usuario.is_superuser:
+        return True
+    return usuario.has_perm(f"usuarios.{PermisoCodigo.EXPORTAR_RESPUESTAS}")

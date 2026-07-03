@@ -6,7 +6,10 @@ from typing import Any
 
 from django.db import transaction
 
-from aplicaciones.contenidos.constantes import ValoresPorDefectoInterfaz
+from aplicaciones.contenidos.constantes import (
+    ValoresPorDefectoAccesibilidad,
+    ValoresPorDefectoInterfaz,
+)
 from aplicaciones.contenidos.models import ConfiguracionInterfaz, LogoInterfaz
 from aplicaciones.comun.utilidades_media import construir_url_absoluta_desde_solicitud
 from aplicaciones.contenidos.selectores import (
@@ -32,7 +35,95 @@ def activar_configuracion_interfaz(
     return configuracion
 
 
-def construir_configuracion_por_defecto() -> dict[str, str | bool | None | list]:
+def construir_bloque_accesibilidad(
+    configuracion: ConfiguracionInterfaz | None = None,
+) -> dict[str, str | bool]:
+    """Construye el bloque de banderas de accesibilidad expuesto al frontend."""
+    if configuracion is None:
+        return {
+            "lectura_voz_habilitada": (
+                ValoresPorDefectoAccesibilidad.LECTURA_VOZ_HABILITADA
+            ),
+            "comandos_voz_habilitada": (
+                ValoresPorDefectoAccesibilidad.COMANDOS_VOZ_HABILITADA
+            ),
+            "lengua_senas_habilitada": (
+                ValoresPorDefectoAccesibilidad.LENGUA_SENAS_HABILITADA
+            ),
+            "fuente_dislexia_habilitada": (
+                ValoresPorDefectoAccesibilidad.FUENTE_DISLEXIA_HABILITADA
+            ),
+            "tema_por_defecto": ValoresPorDefectoAccesibilidad.TEMA_POR_DEFECTO,
+            "centro_relevo_habilitado": (
+                ValoresPorDefectoAccesibilidad.CENTRO_RELEVO_HABILITADO
+            ),
+            "url_centro_relevo": ValoresPorDefectoAccesibilidad.URL_CENTRO_RELEVO,
+        }
+    return {
+        "lectura_voz_habilitada": configuracion.accesibilidad_lectura_voz_habilitada,
+        "comandos_voz_habilitada": configuracion.accesibilidad_comandos_voz_habilitada,
+        "lengua_senas_habilitada": configuracion.accion_lengua_senas_habilitada,
+        "fuente_dislexia_habilitada": (
+            configuracion.accesibilidad_fuente_dislexia_habilitada
+        ),
+        "tema_por_defecto": configuracion.accesibilidad_tema_por_defecto,
+        "centro_relevo_habilitado": configuracion.centro_relevo_habilitado,
+        "url_centro_relevo": configuracion.url_centro_relevo,
+    }
+
+
+def construir_configuracion_accesibilidad_admin(
+    configuracion: ConfiguracionInterfaz | None = None,
+) -> dict[str, str | bool]:
+    """Construye la configuracion de accesibilidad editable en administracion."""
+    bloque = construir_bloque_accesibilidad(configuracion)
+    if configuracion is None:
+        bloque["url_lengua_senas"] = ValoresPorDefectoInterfaz.URL_LENGUA_SENAS
+        bloque["texto_lengua_senas"] = ValoresPorDefectoInterfaz.TEXTO_LENGUA_SENAS
+    else:
+        bloque["url_lengua_senas"] = configuracion.url_lengua_senas
+        bloque["texto_lengua_senas"] = configuracion.texto_lengua_senas
+    return bloque
+
+
+_MAPA_CAMPOS_ACCESIBILIDAD: dict[str, str] = {
+    "lectura_voz_habilitada": "accesibilidad_lectura_voz_habilitada",
+    "comandos_voz_habilitada": "accesibilidad_comandos_voz_habilitada",
+    "lengua_senas_habilitada": "accion_lengua_senas_habilitada",
+    "fuente_dislexia_habilitada": "accesibilidad_fuente_dislexia_habilitada",
+    "tema_por_defecto": "accesibilidad_tema_por_defecto",
+    "url_lengua_senas": "url_lengua_senas",
+    "texto_lengua_senas": "texto_lengua_senas",
+    "centro_relevo_habilitado": "centro_relevo_habilitado",
+    "url_centro_relevo": "url_centro_relevo",
+}
+
+
+def obtener_o_crear_configuracion_activa() -> ConfiguracionInterfaz:
+    """Retorna la configuracion activa o crea una con valores por defecto."""
+    configuracion = obtener_configuracion_interfaz_activa()
+    if configuracion is not None:
+        return configuracion
+    return ConfiguracionInterfaz.objects.create(
+        nombre_aplicativo=ValoresPorDefectoInterfaz.NOMBRE_APLICATIVO,
+        esta_activa=True,
+    )
+
+
+def actualizar_banderas_accesibilidad(
+    datos: dict[str, Any],
+) -> dict[str, str | bool]:
+    """Actualiza las banderas de accesibilidad de la configuracion activa."""
+    with transaction.atomic():
+        configuracion = obtener_o_crear_configuracion_activa()
+        for clave, campo_modelo in _MAPA_CAMPOS_ACCESIBILIDAD.items():
+            if clave in datos:
+                setattr(configuracion, campo_modelo, datos[clave])
+        configuracion.save()
+    return construir_configuracion_accesibilidad_admin(configuracion)
+
+
+def construir_configuracion_por_defecto() -> dict[str, str | bool | None | list | dict]:
     """Construye los valores por defecto de la configuracion de interfaz."""
     return {
         "nombre_aplicativo": ValoresPorDefectoInterfaz.NOMBRE_APLICATIVO,
@@ -77,6 +168,7 @@ def construir_configuracion_por_defecto() -> dict[str, str | bool | None | list]
         "color_primario": ValoresPorDefectoInterfaz.COLOR_PRIMARIO,
         "color_secundario": ValoresPorDefectoInterfaz.COLOR_SECUNDARIO,
         "color_acento": ValoresPorDefectoInterfaz.COLOR_ACENTO,
+        "accesibilidad": construir_bloque_accesibilidad(),
         "flujo_formulario": construir_flujo_formulario_por_defecto(),
     }
 

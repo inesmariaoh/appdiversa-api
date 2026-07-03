@@ -16,6 +16,78 @@ def obtener_catalogo_por_codigo(codigo_catalogo: str) -> Catalogo | None:
     ).first()
 
 
+def obtener_catalogo_admin_por_id(catalogo_id: int) -> Catalogo | None:
+    """Retorna un catalogo no eliminado por su identificador."""
+    return Catalogo.objects.filter(pk=catalogo_id, esta_eliminado=False).first()
+
+
+def obtener_item_admin_por_id(item_id: int) -> ItemCatalogo | None:
+    """Retorna un item no eliminado por su identificador."""
+    return (
+        ItemCatalogo.objects.select_related("catalogo", "item_padre")
+        .filter(pk=item_id, esta_eliminado=False)
+        .first()
+    )
+
+
+def listar_catalogos_admin(filtros: dict[str, str]) -> QuerySet[Catalogo]:
+    """Lista catalogos no eliminados aplicando filtros administrativos."""
+    consulta = Catalogo.objects.filter(esta_eliminado=False)
+
+    tipo_catalogo = filtros.get("tipo_catalogo")
+    if tipo_catalogo:
+        consulta = consulta.filter(tipo_catalogo=tipo_catalogo)
+
+    busqueda = filtros.get("busqueda")
+    if busqueda and busqueda.strip():
+        termino = busqueda.strip()
+        consulta = consulta.filter(
+            Q(nombre__icontains=termino) | Q(codigo__icontains=termino),
+        )
+
+    return consulta.order_by("orden", "nombre")
+
+
+def listar_items_admin(catalogo: Catalogo, busqueda: str | None = None) -> QuerySet[ItemCatalogo]:
+    """Lista items no eliminados de un catalogo para administracion."""
+    consulta = ItemCatalogo.objects.filter(
+        catalogo=catalogo,
+        esta_eliminado=False,
+    ).select_related("item_padre")
+
+    if busqueda and busqueda.strip():
+        termino = busqueda.strip()
+        consulta = consulta.filter(
+            Q(nombre__icontains=termino) | Q(codigo__icontains=termino),
+        )
+
+    return consulta.order_by("orden", "nombre")
+
+
+def existe_codigo_catalogo(codigo: str, excluir_id: int | None = None) -> bool:
+    """Indica si ya existe un catalogo no eliminado con el codigo indicado."""
+    consulta = Catalogo.objects.filter(codigo=codigo, esta_eliminado=False)
+    if excluir_id is not None:
+        consulta = consulta.exclude(pk=excluir_id)
+    return consulta.exists()
+
+
+def existe_codigo_item(
+    catalogo: Catalogo,
+    codigo: str,
+    excluir_id: int | None = None,
+) -> bool:
+    """Indica si ya existe un item no eliminado con el codigo en el catalogo."""
+    consulta = ItemCatalogo.objects.filter(
+        catalogo=catalogo,
+        codigo=codigo,
+        esta_eliminado=False,
+    )
+    if excluir_id is not None:
+        consulta = consulta.exclude(pk=excluir_id)
+    return consulta.exists()
+
+
 def obtener_item_por_codigo(
     codigo_catalogo: str,
     codigo_item: str,

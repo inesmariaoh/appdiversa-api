@@ -9,7 +9,11 @@ from django.db import models
 
 from aplicaciones.archivos.constantes import REFERENCIA_MODELO_ARCHIVO_REPOSITORIO
 from aplicaciones.auditoria.models import AuditoriaModeloAbstracto
-from aplicaciones.contenidos.constantes import RUTA_CARGA_FAVICON_INTERFAZ
+from aplicaciones.contenidos.constantes import (
+    RUTA_CARGA_FAVICON_INTERFAZ,
+    TemaInterfaz,
+    ValoresPorDefectoAccesibilidad,
+)
 
 RUTA_CARGA_LOGOS_INTERFAZ = "interfaz/logos/"
 
@@ -48,6 +52,36 @@ class ConfiguracionInterfaz(AuditoriaModeloAbstracto):
     accion_lengua_senas_habilitada = models.BooleanField(default=False)
     url_lengua_senas = models.URLField(blank=True)
     texto_lengua_senas = models.CharField(max_length=255, blank=True)
+    accesibilidad_lectura_voz_habilitada = models.BooleanField(
+        default=ValoresPorDefectoAccesibilidad.LECTURA_VOZ_HABILITADA,
+        help_text="Habilita la lectura por voz (texto a voz) de los contenidos.",
+    )
+    accesibilidad_comandos_voz_habilitada = models.BooleanField(
+        default=ValoresPorDefectoAccesibilidad.COMANDOS_VOZ_HABILITADA,
+        help_text="Habilita la navegacion mediante comandos de voz.",
+    )
+    accesibilidad_fuente_dislexia_habilitada = models.BooleanField(
+        default=ValoresPorDefectoAccesibilidad.FUENTE_DISLEXIA_HABILITADA,
+        help_text="Habilita la opcion de fuente adaptada para dislexia.",
+    )
+    accesibilidad_tema_por_defecto = models.CharField(
+        max_length=20,
+        choices=TemaInterfaz.OPCIONES,
+        default=ValoresPorDefectoAccesibilidad.TEMA_POR_DEFECTO,
+        help_text="Tema de contraste inicial que aplica el frontend.",
+    )
+    centro_relevo_habilitado = models.BooleanField(
+        default=ValoresPorDefectoAccesibilidad.CENTRO_RELEVO_HABILITADO,
+        help_text=(
+            "Muestra en la barra de accesibilidad un enlace al Centro de Relevo."
+        ),
+    )
+    url_centro_relevo = models.URLField(
+        blank=True,
+        help_text=(
+            "URL del servicio Centro de Relevo para comunicacion asistida por interprete."
+        ),
+    )
     logo_principal = models.ImageField(
         upload_to=RUTA_CARGA_LOGOS_INTERFAZ,
         null=True,

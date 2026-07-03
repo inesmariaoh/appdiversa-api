@@ -198,10 +198,20 @@ class ConfiguracionInterfazAdmin(ModeloAuditableAdmin):
         (
             "Accesibilidad",
             {
+                "description": (
+                    "Banderas parametrizables que activan funcionalidades de "
+                    "accesibilidad en el frontend sin nuevos despliegues."
+                ),
                 "fields": (
                     "accion_lengua_senas_habilitada",
                     "url_lengua_senas",
                     "texto_lengua_senas",
+                    "accesibilidad_lectura_voz_habilitada",
+                    "accesibilidad_comandos_voz_habilitada",
+                    "accesibilidad_fuente_dislexia_habilitada",
+                    "accesibilidad_tema_por_defecto",
+                    "centro_relevo_habilitado",
+                    "url_centro_relevo",
                 ),
             },
         ),

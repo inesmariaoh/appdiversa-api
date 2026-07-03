@@ -11,6 +11,7 @@ from aplicaciones.usuarios.constantes import MensajesAuth, MensajesUsuariosAdmin
 from aplicaciones.usuarios.selectores import (
     usuario_tiene_permiso_consulta_formularios_admin,
     usuario_tiene_permiso_editar_formularios,
+    usuario_tiene_permiso_exportar_respuestas,
     usuario_tiene_permiso_gestion_usuarios,
     usuario_tiene_permiso_publicar_formularios,
 )
@@ -50,6 +51,16 @@ class PermisoGestionarUsuarios(BasePermission):
         return usuario_tiene_permiso_gestion_usuarios(request.user)
 
 
+class PermisoGestionarConfiguracionInterfaz(BasePermission):
+    """Permite editar la configuracion global de interfaz al administrador general."""
+
+    message = MensajesUsuariosAdmin.SIN_PERMISO
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        """Valida permiso de gestion de la configuracion de interfaz."""
+        return usuario_tiene_permiso_gestion_usuarios(request.user)
+
+
 class PermisoConsultarFormulariosAdmin(BasePermission):
     """Permite consulta administrativa de formularios a roles autorizados."""
 
@@ -80,3 +91,13 @@ class PermisoPublicarFormulariosAdmin(BasePermission):
     def has_permission(self, request: Request, view: APIView) -> bool:
         """Valida permiso de publicacion o versionamiento."""
         return usuario_tiene_permiso_publicar_formularios(request.user)
+
+
+class PermisoExportarRespuestas(BasePermission):
+    """Permite exportar respuestas a roles con permiso de exportacion."""
+
+    message = MensajesAuth.NO_AUTENTICADO
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        """Valida permiso de exportacion de respuestas."""
+        return usuario_tiene_permiso_exportar_respuestas(request.user)

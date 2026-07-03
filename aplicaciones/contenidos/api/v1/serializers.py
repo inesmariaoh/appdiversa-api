@@ -10,6 +10,7 @@ from aplicaciones.contenidos.constantes import ValoresPorDefectoInterfaz
 from aplicaciones.contenidos.models import ConfiguracionInterfaz
 from aplicaciones.contenidos.selectores import obtener_mapa_logos_interfaz
 from aplicaciones.contenidos.servicios import (
+    construir_bloque_accesibilidad,
     construir_configuracion_por_defecto,
     construir_lista_logos_publica,
     resolver_texto_alternativo_logo,
@@ -91,6 +92,7 @@ class ConfiguracionInterfazPublicaSerializer(serializers.Serializer):
     color_primario = serializers.CharField()
     color_secundario = serializers.CharField()
     color_acento = serializers.CharField()
+    accesibilidad = serializers.DictField()
     flujo_formulario = serializers.DictField()
 
     def to_representation(
@@ -161,6 +163,7 @@ class ConfiguracionInterfazPublicaSerializer(serializers.Serializer):
             )
 
         datos["logos"] = construir_lista_logos_publica(instancia, solicitud)
+        datos["accesibilidad"] = construir_bloque_accesibilidad(instancia)
 
         if self.context.get("incluir_accesibilidad"):
             codigo_idioma = normalizar_codigo_idioma(self.context.get("idioma"))
@@ -220,6 +223,7 @@ class ConfiguracionInterfazPublicaEsquemaSerializer(serializers.Serializer):
     color_primario = serializers.CharField(default="")
     color_secundario = serializers.CharField(default="")
     color_acento = serializers.CharField(default="")
+    accesibilidad = serializers.DictField(default=dict)
     flujo_formulario = serializers.DictField(default=dict)
     contenido_accesible = serializers.DictField(
         child=ContenidoAccesibleSerializer(),
