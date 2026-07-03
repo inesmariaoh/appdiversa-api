@@ -142,6 +142,16 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# Almacenamiento de archivos: local (disco) o s3 (Amazon S3 o compatible).
+STORAGE_BACKEND = env("STORAGE_BACKEND", default="local")
+AWS_S3_BUCKET = env("AWS_S3_BUCKET", default="")
+AWS_S3_REGION = env("AWS_S3_REGION", default="")
+AWS_S3_ACCESS_KEY_ID = env("AWS_S3_ACCESS_KEY_ID", default="")
+AWS_S3_SECRET_ACCESS_KEY = env("AWS_S3_SECRET_ACCESS_KEY", default="")
+AWS_S3_ENDPOINT_URL = env("AWS_S3_ENDPOINT_URL", default="")
+AWS_S3_PUBLIC_BASE_URL = env("AWS_S3_PUBLIC_BASE_URL", default="")
+AWS_S3_PREFIJO = env("AWS_S3_PREFIJO", default="")
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
