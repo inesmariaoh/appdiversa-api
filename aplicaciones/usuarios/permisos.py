@@ -51,6 +51,16 @@ class PermisoGestionarUsuarios(BasePermission):
         return usuario_tiene_permiso_gestion_usuarios(request.user)
 
 
+class PermisoGestionarConfiguracionInterfaz(BasePermission):
+    """Permite editar la configuracion global de interfaz al administrador general."""
+
+    message = MensajesUsuariosAdmin.SIN_PERMISO
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        """Valida permiso de gestion de la configuracion de interfaz."""
+        return usuario_tiene_permiso_gestion_usuarios(request.user)
+
+
 class PermisoConsultarFormulariosAdmin(BasePermission):
     """Permite consulta administrativa de formularios a roles autorizados."""
 

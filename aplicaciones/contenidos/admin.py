@@ -210,6 +210,8 @@ class ConfiguracionInterfazAdmin(ModeloAuditableAdmin):
                     "accesibilidad_comandos_voz_habilitada",
                     "accesibilidad_fuente_dislexia_habilitada",
                     "accesibilidad_tema_por_defecto",
+                    "centro_relevo_habilitado",
+                    "url_centro_relevo",
                 ),
             },
         ),

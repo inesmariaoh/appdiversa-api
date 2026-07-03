@@ -50,6 +50,8 @@ class ValoresPorDefectoAccesibilidad:
     LENGUA_SENAS_HABILITADA = False
     FUENTE_DISLEXIA_HABILITADA = False
     TEMA_POR_DEFECTO = TemaInterfaz.CLARO
+    CENTRO_RELEVO_HABILITADO = False
+    URL_CENTRO_RELEVO = ""
 
 
 class ValoresPorDefectoFlujoFormulario:

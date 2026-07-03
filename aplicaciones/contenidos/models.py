@@ -70,6 +70,18 @@ class ConfiguracionInterfaz(AuditoriaModeloAbstracto):
         default=ValoresPorDefectoAccesibilidad.TEMA_POR_DEFECTO,
         help_text="Tema de contraste inicial que aplica el frontend.",
     )
+    centro_relevo_habilitado = models.BooleanField(
+        default=ValoresPorDefectoAccesibilidad.CENTRO_RELEVO_HABILITADO,
+        help_text=(
+            "Muestra en la barra de accesibilidad un enlace al Centro de Relevo."
+        ),
+    )
+    url_centro_relevo = models.URLField(
+        blank=True,
+        help_text=(
+            "URL del servicio Centro de Relevo para comunicacion asistida por interprete."
+        ),
+    )
     logo_principal = models.ImageField(
         upload_to=RUTA_CARGA_LOGOS_INTERFAZ,
         null=True,
