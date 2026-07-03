@@ -12,6 +12,10 @@ from .local import *  # noqa: F403
 
 MEDIA_ROOT = Path(tempfile.mkdtemp(prefix="appdiversa_test_media_"))
 
+# Ejecuta las tareas Celery de forma sincrona durante las pruebas.
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True
+
 # Desactiva la limitacion de tasa durante las pruebas para no interferir
 # con escenarios que ejecutan multiples solicitudes consecutivas.
 REST_FRAMEWORK = {  # noqa: F405
