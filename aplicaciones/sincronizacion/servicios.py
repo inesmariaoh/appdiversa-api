@@ -31,8 +31,15 @@ from aplicaciones.respuestas.validacion_util import extraer_valor_resumen
 from aplicaciones.sesiones_anonimas.models import EstadoSesionAnonima, SesionAnonima
 from aplicaciones.sesiones_anonimas.selectores import obtener_sesion_por_uuid
 from aplicaciones.sincronizacion.conflictos import resolver_last_write_wins
-from aplicaciones.sincronizacion.constantes import MensajesSincronizacionApi
-from aplicaciones.sincronizacion.excepciones import ChecksumInvalidoError
+from aplicaciones.sincronizacion.constantes import (
+    MensajesConflictoApi,
+    MensajesSincronizacionApi,
+)
+from aplicaciones.sincronizacion.excepciones import (
+    ChecksumInvalidoError,
+    ConflictoNoEncontradoError,
+    ResolucionConflictoInvalidaError,
+)
 from aplicaciones.sincronizacion.models import (
     ConflictoSincronizacion,
     EstadoSincronizacion,
@@ -174,18 +181,87 @@ def registrar_conflicto(
     return conflicto
 
 
+_RESOLUCIONES_VALIDAS = frozenset(
+    {
+        ResolucionConflicto.CLIENTE,
+        ResolucionConflicto.SERVIDOR,
+        ResolucionConflicto.MANUAL,
+    },
+)
+
+
+def _extraer_valor_conflicto(contenedor: Any) -> Any:
+    """Extrae el valor util almacenado en un campo de conflicto."""
+    if isinstance(contenedor, dict):
+        return contenedor.get("valor")
+    return contenedor
+
+
+def _resolver_valor_a_aplicar(
+    conflicto: ConflictoSincronizacion,
+    resolucion: str,
+    valor_manual: Any,
+) -> Any:
+    """Determina el valor a aplicar segun la resolucion elegida."""
+    if resolucion == ResolucionConflicto.CLIENTE:
+        return _extraer_valor_conflicto(conflicto.valor_cliente)
+    if resolucion == ResolucionConflicto.MANUAL:
+        if valor_manual is None:
+            raise ResolucionConflictoInvalidaError(
+                MensajesConflictoApi.VALOR_MANUAL_REQUERIDO,
+            )
+        return valor_manual
+    return _extraer_valor_conflicto(conflicto.valor_servidor)
+
+
+def _aplicar_valor_resolucion(respuesta: Respuesta, valor: Any) -> None:
+    """Aplica el valor resuelto a la respuesta asociada al conflicto."""
+    pregunta = respuesta.pregunta
+    valor_normalizado = validar_y_normalizar_valor_catalogo(pregunta, valor)
+    asignar_valor_a_respuesta(respuesta, pregunta.tipo_pregunta, valor_normalizado)
+    respuesta.version_respuesta += 1
+    respuesta.requiere_sincronizacion = False
+    respuesta.esta_eliminado = False
+    respuesta.save()
+    registrar_auditoria(
+        entidad=Respuesta.__name__,
+        entidad_id=str(respuesta.pk),
+        accion=AccionAuditoria.EDITAR,
+        valor_nuevo=crear_snapshot_modelo(respuesta),
+        descripcion="Respuesta actualizada por resolucion manual de conflicto.",
+    )
+
+
+@transaction.atomic
 def resolver_conflicto(
     conflicto_uuid: UUID,
     resolucion: str,
+    valor_manual: Any = None,
 ) -> ConflictoSincronizacion:
-    """Resuelve manualmente un conflicto de sincronizacion registrado."""
-    conflicto = ConflictoSincronizacion.objects.filter(uuid=conflicto_uuid).first()
+    """Resuelve manualmente un conflicto aplicando el valor elegido a la respuesta."""
+    if resolucion not in _RESOLUCIONES_VALIDAS:
+        raise ResolucionConflictoInvalidaError(MensajesConflictoApi.RESOLUCION_INVALIDA)
+
+    conflicto = (
+        ConflictoSincronizacion.objects.select_related("respuesta", "respuesta__pregunta")
+        .filter(uuid=conflicto_uuid)
+        .first()
+    )
     if conflicto is None:
-        raise ValueError("Conflicto no encontrado.")
+        raise ConflictoNoEncontradoError()
+
+    aplica_valor = resolucion in (ResolucionConflicto.CLIENTE, ResolucionConflicto.MANUAL)
+    if aplica_valor and conflicto.respuesta is None:
+        raise ResolucionConflictoInvalidaError(
+            MensajesConflictoApi.CONFLICTO_SIN_RESPUESTA,
+        )
+
+    if aplica_valor:
+        valor = _resolver_valor_a_aplicar(conflicto, resolucion, valor_manual)
+        _aplicar_valor_resolucion(conflicto.respuesta, valor)
 
     conflicto.resolucion = resolucion
     conflicto.save(update_fields=["resolucion"])
-
     registrar_auditoria(
         entidad=ConflictoSincronizacion.__name__,
         entidad_id=str(conflicto.pk),
@@ -276,30 +352,167 @@ def _obtener_o_crear_respuesta_objetivo(
     return respuesta_sesion, False, None
 
 
+def _resultado(
+    operacion: OperacionEntrada,
+    estado: str,
+    mensaje: str | None = None,
+    respuesta_id: int | None = None,
+) -> ResultadoOperacionSync:
+    """Construye un resultado de operacion reutilizando el uuid_local."""
+    return ResultadoOperacionSync(
+        uuid_local=operacion.uuid_local,
+        estado=estado,
+        mensaje=mensaje,
+        respuesta_id=respuesta_id,
+    )
+
+
+def _verificar_precondiciones(
+    sesion: SesionAnonima,
+    operacion: OperacionEntrada,
+) -> ResultadoOperacionSync | None:
+    """Valida el estado de la sesion y el checksum antes de sincronizar."""
+    if sesion.estado == EstadoSesionAnonima.FINALIZADA:
+        return _resultado(
+            operacion,
+            EstadoSincronizacion.ERROR,
+            MensajesSincronizacionApi.FORMULARIO_FINALIZADO,
+        )
+    checksum_invalido = operacion.checksum and not validar_checksum_operacion(
+        operacion.codigo_pregunta,
+        operacion.valor,
+        operacion.version_cliente,
+        operacion.checksum,
+    )
+    if checksum_invalido:
+        return _resultado(
+            operacion,
+            EstadoSincronizacion.ERROR,
+            MensajesSincronizacionApi.CHECKSUM_INVALIDO,
+        )
+    return None
+
+
+def _verificar_conflicto_duplicado(
+    pregunta: Pregunta,
+    respuesta_objetivo: Respuesta | None,
+    operacion: OperacionEntrada,
+) -> ResultadoOperacionSync | None:
+    """Detecta un duplicado con uuid_local distinto sobre la misma pregunta."""
+    es_duplicado = (
+        respuesta_objetivo is not None
+        and respuesta_objetivo.uuid_local is not None
+        and respuesta_objetivo.uuid_local != operacion.uuid_local
+        and respuesta_objetivo.pregunta_id == pregunta.pk
+    )
+    if not es_duplicado:
+        return None
+    registrar_conflicto(
+        operacion.uuid_local,
+        respuesta_objetivo,
+        TipoConflicto.DUPLICADO,
+        operacion.valor,
+        _extraer_valor_servidor(respuesta_objetivo),
+        ResolucionConflicto.SERVIDOR,
+    )
+    return _resultado(
+        operacion,
+        EstadoSincronizacion.CONFLICTO,
+        MensajesSincronizacionApi.CONFLICTO_VERSION,
+        respuesta_objetivo.pk,
+    )
+
+
+def _registrar_conflicto_version(
+    respuesta_objetivo: Respuesta,
+    operacion: OperacionEntrada,
+    tipo_conflicto: str,
+    valor_servidor: Any,
+) -> ResultadoOperacionSync | None:
+    """Registra un conflicto de version y devuelve resultado si gana el servidor."""
+    resolucion = resolver_last_write_wins(
+        operacion.version_cliente,
+        respuesta_objetivo.version_cliente,
+        operacion.fecha_cliente,
+        respuesta_objetivo.fecha_modificacion_cliente,
+    )
+    registrar_conflicto(
+        operacion.uuid_local,
+        respuesta_objetivo,
+        tipo_conflicto,
+        operacion.valor,
+        valor_servidor,
+        resolucion,
+    )
+    if resolucion == ResolucionConflicto.SERVIDOR:
+        return _resultado(
+            operacion,
+            EstadoSincronizacion.CONFLICTO,
+            MensajesSincronizacionApi.CONFLICTO_VERSION,
+            respuesta_objetivo.pk,
+        )
+    return None
+
+
+def _procesar_idempotencia(
+    respuesta_objetivo: Respuesta | None,
+    operacion: OperacionEntrada,
+) -> ResultadoOperacionSync | None:
+    """Aplica las reglas de idempotencia por version del cliente."""
+    idempotencia = validar_idempotencia(respuesta_objetivo, operacion.version_cliente)
+
+    if idempotencia == "eliminada":
+        return _resultado(
+            operacion,
+            EstadoSincronizacion.ERROR,
+            MensajesSincronizacionApi.RESPUESTA_ELIMINADA,
+        )
+    if idempotencia == "duplicada":
+        return _resultado(
+            operacion,
+            EstadoSincronizacion.SINCRONIZADA,
+            MensajesSincronizacionApi.OPERACION_DUPLICADA,
+            respuesta_objetivo.pk if respuesta_objetivo else None,
+        )
+    if idempotencia != "conflicto":
+        return None
+    return _registrar_conflicto_version(
+        respuesta_objetivo,
+        operacion,
+        TipoConflicto.VERSION,
+        _extraer_valor_servidor(respuesta_objetivo),
+    )
+
+
+def _verificar_conflicto_modificacion(
+    respuesta_objetivo: Respuesta,
+    operacion: OperacionEntrada,
+) -> ResultadoOperacionSync | None:
+    """Detecta una modificacion concurrente con la misma version de cliente."""
+    valor_servidor_previo = _extraer_valor_servidor(respuesta_objetivo)
+    hay_modificacion = (
+        respuesta_objetivo.version_cliente == operacion.version_cliente
+        and valor_servidor_previo != operacion.valor
+    )
+    if not hay_modificacion:
+        return None
+    return _registrar_conflicto_version(
+        respuesta_objetivo,
+        operacion,
+        TipoConflicto.MODIFICACION,
+        valor_servidor_previo,
+    )
+
+
 def sincronizar_respuesta(
     sesion: SesionAnonima,
     dispositivo: str,
     operacion: OperacionEntrada,
 ) -> ResultadoOperacionSync:
     """Sincroniza una respuesta individual con validacion de idempotencia."""
-    if sesion.estado == EstadoSesionAnonima.FINALIZADA:
-        return ResultadoOperacionSync(
-            uuid_local=operacion.uuid_local,
-            estado=EstadoSincronizacion.ERROR,
-            mensaje=MensajesSincronizacionApi.FORMULARIO_FINALIZADO,
-        )
-
-    if operacion.checksum and not validar_checksum_operacion(
-        operacion.codigo_pregunta,
-        operacion.valor,
-        operacion.version_cliente,
-        operacion.checksum,
-    ):
-        return ResultadoOperacionSync(
-            uuid_local=operacion.uuid_local,
-            estado=EstadoSincronizacion.ERROR,
-            mensaje=MensajesSincronizacionApi.CHECKSUM_INVALIDO,
-        )
+    resultado_precondicion = _verificar_precondiciones(sesion, operacion)
+    if resultado_precondicion is not None:
+        return resultado_precondicion
 
     pregunta = obtener_pregunta_por_codigo_en_version(
         sesion.version_formulario,
@@ -313,76 +526,25 @@ def sincronizar_respuesta(
         pregunta,
         operacion.uuid_local,
     )
-
     if error_eliminada is not None:
-        return ResultadoOperacionSync(
-            uuid_local=operacion.uuid_local,
-            estado=EstadoSincronizacion.ERROR,
-            mensaje=error_eliminada,
-            respuesta_id=respuesta_objetivo.pk if respuesta_objetivo else None,
+        return _resultado(
+            operacion,
+            EstadoSincronizacion.ERROR,
+            error_eliminada,
+            respuesta_objetivo.pk if respuesta_objetivo else None,
         )
 
-    if (
-        respuesta_objetivo is not None
-        and respuesta_objetivo.uuid_local is not None
-        and respuesta_objetivo.uuid_local != operacion.uuid_local
-        and respuesta_objetivo.pregunta_id == pregunta.pk
-    ):
-        registrar_conflicto(
-            operacion.uuid_local,
-            respuesta_objetivo,
-            TipoConflicto.DUPLICADO,
-            operacion.valor,
-            _extraer_valor_servidor(respuesta_objetivo),
-            ResolucionConflicto.SERVIDOR,
-        )
-        return ResultadoOperacionSync(
-            uuid_local=operacion.uuid_local,
-            estado=EstadoSincronizacion.CONFLICTO,
-            mensaje=MensajesSincronizacionApi.CONFLICTO_VERSION,
-            respuesta_id=respuesta_objetivo.pk,
-        )
+    resultado_duplicado = _verificar_conflicto_duplicado(
+        pregunta,
+        respuesta_objetivo,
+        operacion,
+    )
+    if resultado_duplicado is not None:
+        return resultado_duplicado
 
-    idempotencia = validar_idempotencia(respuesta_objetivo, operacion.version_cliente)
-
-    if idempotencia == "eliminada":
-        return ResultadoOperacionSync(
-            uuid_local=operacion.uuid_local,
-            estado=EstadoSincronizacion.ERROR,
-            mensaje=MensajesSincronizacionApi.RESPUESTA_ELIMINADA,
-        )
-
-    if idempotencia == "duplicada":
-        return ResultadoOperacionSync(
-            uuid_local=operacion.uuid_local,
-            estado=EstadoSincronizacion.SINCRONIZADA,
-            mensaje=MensajesSincronizacionApi.OPERACION_DUPLICADA,
-            respuesta_id=respuesta_objetivo.pk if respuesta_objetivo else None,
-        )
-
-    if idempotencia == "conflicto":
-        valor_servidor = _extraer_valor_servidor(respuesta_objetivo)
-        resolucion = resolver_last_write_wins(
-            operacion.version_cliente,
-            respuesta_objetivo.version_cliente,
-            operacion.fecha_cliente,
-            respuesta_objetivo.fecha_modificacion_cliente,
-        )
-        registrar_conflicto(
-            operacion.uuid_local,
-            respuesta_objetivo,
-            TipoConflicto.VERSION,
-            operacion.valor,
-            valor_servidor,
-            resolucion,
-        )
-        if resolucion == ResolucionConflicto.SERVIDOR:
-            return ResultadoOperacionSync(
-                uuid_local=operacion.uuid_local,
-                estado=EstadoSincronizacion.CONFLICTO,
-                mensaje=MensajesSincronizacionApi.CONFLICTO_VERSION,
-                respuesta_id=respuesta_objetivo.pk,
-            )
+    resultado_idempotencia = _procesar_idempotencia(respuesta_objetivo, operacion)
+    if resultado_idempotencia is not None:
+        return resultado_idempotencia
 
     fue_creada = crear_nueva or respuesta_objetivo is None
     if fue_creada:
@@ -391,38 +553,13 @@ def sincronizar_respuesta(
             pregunta=pregunta,
             version_respuesta=1,
         )
-
-    valor_servidor_previo = (
-        _extraer_valor_servidor(respuesta_objetivo)
-        if not fue_creada
-        else None
-    )
-    if (
-        not fue_creada
-        and respuesta_objetivo.version_cliente == operacion.version_cliente
-        and valor_servidor_previo != operacion.valor
-    ):
-        resolucion = resolver_last_write_wins(
-            operacion.version_cliente,
-            respuesta_objetivo.version_cliente,
-            operacion.fecha_cliente,
-            respuesta_objetivo.fecha_modificacion_cliente,
-        )
-        registrar_conflicto(
-            operacion.uuid_local,
+    else:
+        resultado_modificacion = _verificar_conflicto_modificacion(
             respuesta_objetivo,
-            TipoConflicto.MODIFICACION,
-            operacion.valor,
-            valor_servidor_previo,
-            resolucion,
+            operacion,
         )
-        if resolucion == ResolucionConflicto.SERVIDOR:
-            return ResultadoOperacionSync(
-                uuid_local=operacion.uuid_local,
-                estado=EstadoSincronizacion.CONFLICTO,
-                mensaje=MensajesSincronizacionApi.CONFLICTO_VERSION,
-                respuesta_id=respuesta_objetivo.pk,
-            )
+        if resultado_modificacion is not None:
+            return resultado_modificacion
 
     respuesta_final = _aplicar_respuesta_sincronizada(
         respuesta_objetivo,
@@ -433,9 +570,9 @@ def sincronizar_respuesta(
     )
     _actualizar_actividad_sesion(sesion)
 
-    return ResultadoOperacionSync(
-        uuid_local=operacion.uuid_local,
-        estado=EstadoSincronizacion.SINCRONIZADA,
+    return _resultado(
+        operacion,
+        EstadoSincronizacion.SINCRONIZADA,
         respuesta_id=respuesta_final.pk,
     )
 
