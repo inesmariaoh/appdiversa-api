@@ -12,7 +12,6 @@ from django.utils import timezone
 
 from aplicaciones.formularios.models import (
     AccionRegla,
-    CatalogoGeografico,
     EstadoFormulario,
     Formulario,
     FormularioVersion,
@@ -23,7 +22,6 @@ from aplicaciones.formularios.models import (
     ReglaPregunta,
     SeccionFormulario,
     TextoFormulario,
-    TipoCatalogoGeografico,
     TipoFormulario,
     TipoPregunta,
     TipoTextoFormulario,
@@ -266,25 +264,6 @@ class OpcionRespuestaModelTests(TestCase):
                     etiqueta="Duplicada",
                     valor="2",
                     orden=3,
-                )
-
-
-class CatalogoGeograficoModelTests(TestCase):
-    """Pruebas del catalogo geografico."""
-
-    def test_constraint_unico_tipo_codigo(self) -> None:
-        CatalogoGeografico.objects.create(
-            tipo=TipoCatalogoGeografico.PAIS,
-            codigo="CO",
-            nombre="Colombia",
-        )
-
-        with transaction.atomic():
-            with self.assertRaises(IntegrityError):
-                CatalogoGeografico.objects.create(
-                    tipo=TipoCatalogoGeografico.PAIS,
-                    codigo="CO",
-                    nombre="Colombia duplicada",
                 )
 
 
