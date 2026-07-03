@@ -177,9 +177,12 @@ EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 EMAIL_DEFAULT_FROM = env("EMAIL_DEFAULT_FROM", default="noreply@appdiversa.local")
 DEFAULT_FROM_EMAIL = EMAIL_DEFAULT_FROM
-EMAIL_TIMEOUT = env("EMAIL_TIMEOUT")
+EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", default=10)
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")
 NOTIFICACIONES_PROVEEDOR = env("NOTIFICACIONES_PROVEEDOR")
+# Cuando esta habilitado, los correos se envian por la cola asincrona (Celery)
+# en lugar de bloquear la peticion. Requiere worker y broker disponibles.
+NOTIFICACIONES_USAR_CELERY = env.bool("NOTIFICACIONES_USAR_CELERY", default=False)
 
 if (
     NOTIFICACIONES_PROVEEDOR == "smtp"

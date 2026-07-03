@@ -7,9 +7,11 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
+from django.conf import settings
 from django.core.mail import BadHeaderError
 from django.db import transaction
 from django.utils import timezone
+from kombu.exceptions import OperationalError as ErrorBrokerNotificacion
 from smtplib import SMTPException
 
 from aplicaciones.auditoria.constantes import AccionAuditoria
@@ -180,6 +182,75 @@ def enviar_notificacion(
         )
         marcar_fallida(notificacion, error_envio=str(error))
     return notificacion
+
+
+def _enviar_notificacion_segura(
+    codigo_plantilla: str,
+    destinatario: str,
+    variables: dict[str, Any] | None,
+    reply_to: str | None,
+) -> None:
+    """Envia una notificacion tolerando la ausencia de plantilla activa."""
+    try:
+        enviar_notificacion(
+            codigo_plantilla=codigo_plantilla,
+            destinatario=destinatario,
+            variables=variables,
+            reply_to=reply_to,
+        )
+    except PlantillaNotificacionNoEncontradaError:
+        _logger.warning(
+            "No se envio la notificacion %s: plantilla no disponible o inactiva.",
+            codigo_plantilla,
+        )
+
+
+def _encolar_o_enviar_notificacion(
+    codigo_plantilla: str,
+    destinatario: str,
+    variables: dict[str, Any] | None,
+    reply_to: str | None,
+) -> None:
+    """Encola la notificacion en la cola asincrona o la envia de forma sincrona."""
+    if getattr(settings, "NOTIFICACIONES_USAR_CELERY", False):
+        from aplicaciones.notificaciones.tasks import enviar_notificacion_async
+
+        try:
+            enviar_notificacion_async.delay(
+                codigo_plantilla=codigo_plantilla,
+                destinatario=destinatario,
+                variables=variables,
+                reply_to=reply_to,
+            )
+            return
+        except ErrorBrokerNotificacion:
+            _logger.warning(
+                "Cola de notificaciones no disponible; se envia %s de forma sincrona.",
+                codigo_plantilla,
+            )
+    _enviar_notificacion_segura(codigo_plantilla, destinatario, variables, reply_to)
+
+
+def despachar_notificacion(
+    codigo_plantilla: str,
+    destinatario: str,
+    variables: dict[str, Any] | None = None,
+    reply_to: str | None = None,
+) -> None:
+    """Difiere el envio de una notificacion hasta confirmar la transaccion.
+
+    Evita bloquear la operacion principal: usa la cola asincrona cuando esta
+    habilitada y, en su defecto, realiza un envio sincrono acotado por
+    EMAIL_TIMEOUT. El envio solo ocurre si la transaccion actual confirma.
+    """
+    transaction.on_commit(
+        lambda: _encolar_o_enviar_notificacion(
+            codigo_plantilla,
+            destinatario,
+            variables,
+            reply_to,
+        )
+    )
 
 
 def probar_notificacion(

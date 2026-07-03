@@ -2,7 +2,6 @@
 Servicios de registro de usuarios.
 """
 
-import logging
 import re
 
 from django.contrib.auth import get_user_model
@@ -13,8 +12,7 @@ from django.db import transaction
 from aplicaciones.auditoria.constantes import AccionAuditoria
 from aplicaciones.auditoria.servicios import registrar_auditoria
 from aplicaciones.notificaciones.constantes import CodigoPlantillaCorreo
-from aplicaciones.notificaciones.excepciones import PlantillaNotificacionNoEncontradaError
-from aplicaciones.notificaciones.servicios import enviar_notificacion
+from aplicaciones.notificaciones.servicios import despachar_notificacion
 from aplicaciones.notificaciones.servicios_correo import obtener_nombre_aplicativo
 from aplicaciones.usuarios.constantes import GrupoSistema
 from aplicaciones.usuarios.excepciones import (
@@ -27,7 +25,6 @@ from aplicaciones.usuarios.servicios.autenticacion import validar_contrasena_dja
 from aplicaciones.usuarios.servicios.verificacion_correo import enviar_verificacion_correo
 
 User = get_user_model()
-_logger = logging.getLogger(__name__)
 
 CODIGO_PLANTILLA_CONFIRMACION = CodigoPlantillaCorreo.CONFIRMACION_REGISTRO
 LONGITUD_MAXIMA_USERNAME = 150
@@ -43,11 +40,11 @@ def _asignar_grupo_encuestado(usuario: AbstractBaseUser) -> None:
 
 
 def _enviar_correo_bienvenida(usuario: AbstractBaseUser) -> None:
-    """Envia correo de confirmacion o bienvenida si el usuario tiene email."""
+    """Programa el correo de bienvenida si el usuario tiene email."""
     if not usuario.email:
         return
     url_login = f"{settings.FRONTEND_URL.rstrip('/')}/auth/login"
-    enviar_notificacion(
+    despachar_notificacion(
         codigo_plantilla=CODIGO_PLANTILLA_CONFIRMACION,
         destinatario=usuario.email,
         variables={
@@ -61,14 +58,9 @@ def _enviar_correo_bienvenida(usuario: AbstractBaseUser) -> None:
 
 
 def _notificar_registro(usuario: AbstractBaseUser) -> None:
-    """Envia los correos de registro sin interrumpir el alta del usuario."""
-    try:
-        _enviar_correo_bienvenida(usuario)
-        enviar_verificacion_correo(usuario)
-    except PlantillaNotificacionNoEncontradaError:
-        _logger.warning(
-            "No se enviaron los correos de registro: plantilla no disponible o inactiva.",
-        )
+    """Programa los correos de registro sin bloquear ni interrumpir el alta."""
+    _enviar_correo_bienvenida(usuario)
+    enviar_verificacion_correo(usuario)
 
 
 @transaction.atomic

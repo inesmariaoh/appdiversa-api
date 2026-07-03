@@ -13,7 +13,7 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from aplicaciones.auditoria.constantes import AccionAuditoria
 from aplicaciones.auditoria.servicios import registrar_auditoria
 from aplicaciones.notificaciones.constantes import CodigoPlantillaCorreo
-from aplicaciones.notificaciones.servicios import enviar_notificacion
+from aplicaciones.notificaciones.servicios import despachar_notificacion
 from aplicaciones.notificaciones.servicios_correo import obtener_nombre_aplicativo
 from aplicaciones.usuarios.excepciones import TokenVerificacionInvalidoError
 from aplicaciones.usuarios.models import VerificacionCorreo
@@ -39,12 +39,12 @@ def _construir_url_verificacion(usuario: AbstractBaseUser) -> str:
 
 
 def enviar_verificacion_correo(usuario: AbstractBaseUser) -> None:
-    """Genera el token y envia el correo con el enlace de verificacion."""
+    """Genera el token y programa el correo con el enlace de verificacion."""
     if not usuario.email:
         return
     obtener_o_crear_verificacion(usuario)
     url_verificar = _construir_url_verificacion(usuario)
-    enviar_notificacion(
+    despachar_notificacion(
         codigo_plantilla=CODIGO_PLANTILLA_VERIFICACION,
         destinatario=usuario.email,
         variables={
