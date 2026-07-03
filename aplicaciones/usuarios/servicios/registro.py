@@ -22,6 +22,7 @@ from aplicaciones.usuarios.excepciones import (
 )
 from aplicaciones.usuarios.selectores import existe_email, existe_username
 from aplicaciones.usuarios.servicios.autenticacion import validar_contrasena_django
+from aplicaciones.usuarios.servicios.verificacion_correo import enviar_verificacion_correo
 
 User = get_user_model()
 
@@ -90,6 +91,7 @@ def registrar_usuario(datos: dict) -> AbstractBaseUser:
         descripcion="Registro de usuario desde la API publica.",
     )
     _enviar_correo_bienvenida(usuario)
+    enviar_verificacion_correo(usuario)
     return usuario
 
 

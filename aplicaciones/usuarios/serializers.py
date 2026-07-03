@@ -137,6 +137,19 @@ class LoginSalidaSerializer(serializers.Serializer):
     detalle = serializers.CharField()
 
 
+class VerificarCorreoEntradaSerializer(serializers.Serializer):
+    """Entrada para confirmar la verificacion de correo electronico."""
+
+    uid = serializers.CharField()
+    token = serializers.CharField()
+
+
+class ReenviarVerificacionEntradaSerializer(serializers.Serializer):
+    """Entrada para solicitar el reenvio del correo de verificacion."""
+
+    email = serializers.EmailField()
+
+
 class DetalleSalidaSerializer(serializers.Serializer):
     """Respuesta con mensaje funcional en campo detalle."""
 

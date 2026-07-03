@@ -23,10 +23,12 @@ from aplicaciones.usuarios.api.v1.views import (
     MisRespuestasExportarView,
     MisRespuestasView,
     PerfilView,
+    ReenviarVerificacionView,
     RegistroCorreoView,
     RegistroView,
     RestaurarPasswordView,
     SolicitarRestaurarPasswordView,
+    VerificarCorreoView,
 )
 
 urlpatterns_auth = [
@@ -53,6 +55,16 @@ urlpatterns_auth = [
         "restaurar-password/",
         RestaurarPasswordView.as_view(),
         name="auth-restaurar-password",
+    ),
+    path(
+        "verificar-correo/",
+        VerificarCorreoView.as_view(),
+        name="auth-verificar-correo",
+    ),
+    path(
+        "reenviar-verificacion/",
+        ReenviarVerificacionView.as_view(),
+        name="auth-reenviar-verificacion",
     ),
 ]
 

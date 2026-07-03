@@ -40,6 +40,7 @@ class CodigoPlantillaCorreo:
     RESTAURAR_PASSWORD = "restaurar_password"
     USUARIO_CREADO = "usuario_creado"
     CONFIRMACION_REGISTRO = "confirmacion_registro"
+    VERIFICACION_CORREO = "verificacion_correo"
     FORMULARIO_FINALIZADO = "formulario_finalizado"
     COPIA_RESPUESTAS = "copia_respuestas_formulario"
     CONTACTO_RECIBIDO = "contacto_recibido"

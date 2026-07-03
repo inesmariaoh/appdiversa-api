@@ -2,7 +2,11 @@
 Excepciones funcionales del modulo de usuarios.
 """
 
-from aplicaciones.usuarios.constantes import MensajesAuth, MensajesUsuariosAdmin
+from aplicaciones.usuarios.constantes import (
+    MensajesAuth,
+    MensajesUsuariosAdmin,
+    MensajesVerificacionCorreo,
+)
 
 
 class CredencialesInvalidasError(Exception):
@@ -83,3 +87,11 @@ class TokenRestaurarInvalidoError(Exception):
     def __init__(self) -> None:
         super().__init__(MensajesAuth.TOKEN_RESTAURAR_INVALIDO)
         self.mensaje = MensajesAuth.TOKEN_RESTAURAR_INVALIDO
+
+
+class TokenVerificacionInvalidoError(Exception):
+    """Indica que el token de verificacion de correo no es valido."""
+
+    def __init__(self) -> None:
+        super().__init__(MensajesVerificacionCorreo.TOKEN_VERIFICACION_INVALIDO)
+        self.mensaje = MensajesVerificacionCorreo.TOKEN_VERIFICACION_INVALIDO

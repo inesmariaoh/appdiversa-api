@@ -31,6 +31,7 @@ class AccionAuditoria(models.TextChoices):
     FINALIZAR_SESION = "finalizar_sesion", "Finalizar sesión"
     REGISTRAR_USUARIO = "registrar_usuario", "Registrar usuario"
     EDITAR_PERFIL = "editar_perfil", "Editar perfil"
+    VERIFICAR_CORREO = "verificar_correo", "Verificar correo"
     CAMBIAR_PASSWORD = "cambiar_password", "Cambiar contraseña"
     SOLICITAR_RESTAURAR_PASSWORD = "solicitar_restaurar_password", "Solicitar restaurar contraseña"
     PASSWORD_RESTAURADO = "password_restaurado", "Contraseña restaurada"

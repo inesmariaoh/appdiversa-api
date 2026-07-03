@@ -22,6 +22,7 @@ from aplicaciones.usuarios.constantes import (
     MensajesAuth,
     MensajesContacto,
     MensajesCopiaRespuestas,
+    MensajesVerificacionCorreo,
 )
 from aplicaciones.usuarios.excepciones import (
     ContrasenaActualIncorrectaError,
@@ -30,6 +31,7 @@ from aplicaciones.usuarios.excepciones import (
     CredencialesInvalidasError,
     EmailDuplicadoError,
     TokenRestaurarInvalidoError,
+    TokenVerificacionInvalidoError,
     UsernameDuplicadoError,
     UsuarioInactivoError,
 )
@@ -48,9 +50,11 @@ from aplicaciones.usuarios.serializers import (
     PerfilEditableSerializer,
     RegistroCorreoEntradaSerializer,
     RegistroEntradaSerializer,
+    ReenviarVerificacionEntradaSerializer,
     RestaurarPasswordEntradaSerializer,
     SolicitarRestaurarPasswordEntradaSerializer,
     UsuarioAutenticadoSerializer,
+    VerificarCorreoEntradaSerializer,
 )
 from aplicaciones.usuarios.servicios.autenticacion import (
     autenticar_usuario,
@@ -82,6 +86,10 @@ from aplicaciones.usuarios.servicios.registro import (
 from aplicaciones.usuarios.servicios.restaurar_password import (
     restaurar_password,
     solicitar_restaurar_password,
+)
+from aplicaciones.usuarios.servicios.verificacion_correo import (
+    reenviar_verificacion_correo,
+    verificar_correo,
 )
 
 _AUTENTICACION_SESION = [AutenticacionSesionApi]
@@ -413,6 +421,62 @@ class RestaurarPasswordView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return Response({"detalle": MensajesAuth.CONTRASENA_RESTAURADA})
+
+
+class VerificarCorreoView(APIView):
+    """Confirma la verificacion de correo mediante uid y token."""
+
+    permission_classes = [AllowAny]
+    authentication_classes = _AUTENTICACION_SESION
+
+    @extend_schema(
+        tags=["Auth"],
+        summary="Verificar correo electrónico",
+        request=VerificarCorreoEntradaSerializer,
+        responses={
+            status.HTTP_200_OK: DetalleSalidaSerializer,
+            status.HTTP_400_BAD_REQUEST: OpenApiResponse(response=_DETALLE_ERROR),
+        },
+    )
+    def post(self, solicitud: Request) -> Response:
+        """Valida el enlace de verificacion y marca el correo como verificado."""
+        entrada = VerificarCorreoEntradaSerializer(data=solicitud.data)
+        entrada.is_valid(raise_exception=True)
+        datos = entrada.validated_data
+        try:
+            verificar_correo(datos["uid"], datos["token"])
+        except TokenVerificacionInvalidoError as error:
+            return Response(
+                {"detalle": error.mensaje},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(
+            {"detalle": MensajesVerificacionCorreo.CORREO_VERIFICADO},
+        )
+
+
+class ReenviarVerificacionView(APIView):
+    """Reenvia el correo de verificacion sin revelar existencia del correo."""
+
+    permission_classes = [AllowAny]
+    authentication_classes = _AUTENTICACION_SESION
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = ScopeThrottle.RESTAURAR_PASSWORD
+
+    @extend_schema(
+        tags=["Auth"],
+        summary="Reenviar verificación de correo",
+        request=ReenviarVerificacionEntradaSerializer,
+        responses={status.HTTP_200_OK: DetalleSalidaSerializer},
+    )
+    def post(self, solicitud: Request) -> Response:
+        """Reenvia el enlace de verificacion al correo indicado."""
+        entrada = ReenviarVerificacionEntradaSerializer(data=solicitud.data)
+        entrada.is_valid(raise_exception=True)
+        reenviar_verificacion_correo(entrada.validated_data["email"])
+        return Response(
+            {"detalle": MensajesVerificacionCorreo.SOLICITUD_REENVIO},
+        )
 
 
 class ContactoView(APIView):
